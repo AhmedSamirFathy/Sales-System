@@ -1,0 +1,15 @@
+Entry(self.formframe, textvariable=self.itemeditv, font="roboto 14", bg="#FFFFFF", width=20).place(x=142, y=0,
+                                                                                                           height=40)
+        Entry(self.formframe, textvariable=self.itemeditdescv, font="roboto 14", bg="#FFFFFF", width=20).place(x=142,
+                                                                                                               y=60,
+                                                                                                               height=40)
+        x = myentry(self.formframe, textvariable=self.itemeditcatv, font="roboto 14", bg="#FFFFFF", width=20)
+        x.place(x=142, y=120, height=40)
+Entry(self.formframe, textvariable=self.itemeditpricev, font="roboto 14", bg="#FFFFFF", width=20).place(x=142,
+                                                                                                                y=180,
+                                                                                                                height=40)
+        Entry(self.formframe, textvariable=self.itemeditstockv, font="roboto 14", bg="#FFFFFF", width=20).place(x=142,
+                                                                                                                y=240,
+                                                                                                                height=40)
+        Entry(self.formframe, textvariable=self.addstock, font="roboto 14", bg="#FFFFFF", width=20).place(x=142, y=300,
+                                                                                                          height=40)

@@ -1,0 +1,4 @@
+        if (self.cond == 1):
+            self.tree.delete(*self.tree.get_children())
+            self.tree.grid_remove()
+            self.tree.destroy()

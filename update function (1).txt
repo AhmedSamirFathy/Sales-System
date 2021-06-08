@@ -1,0 +1,2463 @@
+"""
+    INVENTORY MANAGEMENT SYSTEM
+    Developed By->PJ28105
+    Started On ->08/11/18
+"""
+import sqlite3
+from tkinter import ttk
+from tkinter import *
+from tkinter import messagebox
+from datetime import datetime
+from Addtional_features import mycombobox, myentry
+
+
+# ADMIN MENU
+class Admin:
+    global merchant_name
+
+    def __init__(self):
+        self.base = None
+        self.cur = None
+
+    def _init_(self, mainw):
+        self.mainw = mainw
+
+    # ADD ADMIN MAIN MENU TO WINDOW,ALL FRAMES AND ADD IMAGE BUTTONS
+    def admin_mainmenu(self, a, b):
+        self.mainframe = LabelFrame(self.mainw, width=1400, height=145, bg="gray")
+        self.mainframe.place(x=0, y=100)
+        mi = PhotoImage(file="images/accounts.png")
+        mi = mi.subsample(a, b)
+        self.accounts = Button(self.mainframe, text="مستخدمون", font="roboto 11 bold", bd=5, image=mi, compound=TOP,
+                               command=self.buildusertable)
+        self.accounts.image = mi
+        self.accounts.place(x=750, y=27)
+
+        mi = PhotoImage(file="images/Contacts-512.png")
+        mi = mi.subsample(a, b)
+        self.accounts = Button(self.mainframe, text="عملاء", font="roboto 11 bold", bd=5, image=mi, compound=TOP)
+        self.accounts.image = mi
+        self.accounts.place(x=900, y=27)
+
+        mi = PhotoImage(file="images/invoice2.png")
+        mi = mi.subsample(a, b)
+        self.aitems = Button(self.mainframe, text="بيع", bd=5, font="roboto 11 bold", image=mi, compound=TOP,
+                             command=self.sales)
+        self.aitems.image = mi
+        self.aitems.place(x=300, y=27)
+
+        mi = PhotoImage(file="images/Door_Out-512.png")
+        mi = mi.subsample(a, b)
+        self.logout = Button(self.mainframe, text="خروج", bd=5, font="roboto 11 bold", image=mi, compound=TOP)
+        self.logout.image = mi
+        self.logout.place(x=1200, y=27)
+        mi = PhotoImage(file="images/change1.png")
+        mi = mi.subsample(a, b)
+        self.changeuser = Button(self.mainframe, text="تبديل الحساب", bd=5, font="roboto 11 bold", image=mi,
+                                 compound=TOP)
+        self.changeuser.image = mi
+        self.changeuser.place(x=1050, y=27)
+        mi = PhotoImage(file="images/items.png")
+        mi = mi.subsample(a, b)
+        self.items = Button(self.mainframe, text="وارد", bd=5, image=mi, font="roboto 11 bold", compound=TOP,
+                            command=self.additems)
+        self.items.image = mi
+        self.items.place(x=150, y=27)
+        mi = PhotoImage(file="images/inventory.png")
+        mi = mi.subsample(a, b)
+        self.stocks = Button(self.mainframe, text="تجار", bd=5, image=mi, font="roboto 11 bold", compound=TOP,
+                             command=self.buildprodtable)
+        self.stocks.image = mi
+        self.stocks.place(x=450, y=27)
+        mi = PhotoImage(file="images/sales.png")
+        mi = mi.subsample(a, b)
+        self.sales = Button(self.mainframe, text="مبيعات", bd=5, font="roboto 11 bold", image=mi, compound=TOP,
+                            command=self.buildsalestable)
+
+        self.sales.image = mi
+        self.sales.place(x=600, y=27)
+        self.formframe = Frame(self.mainw, width=500, height=550, bg="#FFFFFF")
+        self.formframe.place(x=620, y=315)
+        self.formframeinfo = self.formframe.place_info()
+        self.tableframe1 = LabelFrame(self.mainw, width=350, height=700)
+        self.tableframe1.place(x=1200, y=315, anchor=NE)
+        self.tableframe1info = self.tableframe1.place_info()
+
+        self.tableframe2 = LabelFrame(self.mainw, width=350, height=700)
+        self.tableframe2.place(x=600, y=310, anchor=NE)
+        self.tableframe2info = self.tableframe2.place_info()
+
+        self.tableframe = LabelFrame(self.mainw, width=350, height=700)
+        self.tableframe.place(x=500, y=315, anchor=NE)
+        self.tableframeinfo = self.tableframe.place_info()
+        self.itemframe = Frame(self.mainw, bg="#FFFFFF", width=1300, height=400)
+        self.itemframe.place(x=620, y=310, anchor=NW)
+        self.itemframeinfo = self.itemframe.place_info()
+
+        self.salesframe = Frame(self.mainw, bg="#FFFFFF", width=1300, height=400)
+        self.salesframe.place(x=480, y=250, anchor=NW)
+        self.salesframeinfo = self.salesframe.place_info()
+
+        self.storesframe = Frame(self.mainw, bg="#FFFFFF", width=1300, height=400)
+        self.storesframe.place(x=500, y=310, anchor=NW)
+        self.storesframeinfo = self.storesframe.place_info()
+
+        self.marketfrme = Frame(self.mainw, bg="#FFFFFF", width=1300, height=400)
+        self.marketfrme.place(x=500, y=310, anchor=NW)
+        self.marketfrmeinfo = self.marketfrme.place_info()
+
+        self.returnframe = Frame(self.mainw, bg="#FFFFFF", width=600, height=700)
+        self.returnframe.place(x=800, y=310, anchor=NW)
+        self.returnframeinfo = self.returnframe.place_info()
+
+        self.tableframe3 = LabelFrame(self.mainw, width=350, height=700)
+        self.tableframe3.place(x=620, y=310, anchor=NE)
+        self.tableframe3info = self.tableframe3.place_info()
+
+        self.tableframe4 = LabelFrame(self.mainw, width=350, height=700)
+        self.tableframe4.place(x=480, y=290, anchor=NE)
+        self.tableframe4info = self.tableframe4.place_info()
+
+        self.tableframe5 = LabelFrame(self.mainw, width=180, height=700)
+        self.tableframe5.place(x=1380, y=310, anchor=NE)
+        self.tableframe5info = self.tableframe5.place_info()
+
+        self.tableframe6 = LabelFrame(self.mainw, width=300, height=700)
+        self.tableframe6.place(x=450, y=290, anchor=NE)
+        self.tableframe6info = self.tableframe6.place_info()
+
+        self.tableframe7 = LabelFrame(self.mainw, width=180, height=700)
+        self.tableframe7.place(x=1380, y=310, anchor=NE)
+        self.tableframe7info = self.tableframe7.place_info()
+
+
+        self.formframe1 = Frame(self.mainw, width=500, height=445, bg="#FFFFFF")
+        self.formframe1.place(x=100, y=275)
+        self.formframe1info = self.formframe1.place_info()
+        self.searchframe = Frame(self.mainw, width=720, height=70, bg="#FFFFFF")
+        self.searchframe.place(x=575, y=260)
+        self.searchframeinfo = self.searchframe.place_info()
+        self.searchbut = Button(self.searchframe, text="Search Description", font="roboto 14", bg="#FFFFFF", bd=5,
+                                command=self.searchprod)
+        self.searchbut.place(x=0, y=20, height=40)
+        self.searchvar = StringVar()
+        self.searchentry = myentry(self.searchframe, textvariable=self.searchvar, font="roboto 14", width=25,
+                                   bg="#FFFFFF")
+        self.searchentry.place(x=210, y=20, height=40)
+        self.cur.execute("select merchant_name from merchants")
+        li = self.cur.fetchall()
+        a = []
+        for i in range(0, len(li)):
+            a.append(li[i][0])
+        self.searchentry.set_completion_list(a)
+        self.resetbut = Button(self.searchframe, text="مسح", font="roboto 14", bd=5, width=8, bg="#FFFFFF",
+                               command=self.resetprodtabel)
+        self.resetbut.place(x=510, y=18, height=40)
+        self.cond = 0
+        self.buildprodtable()
+
+    # ADMIN MAIN MENU ENDS
+
+    # BUILD PRODUCT TABLE AT INVENTORY
+    def buildprodtable(self):
+        self.tableframe4.place_forget()
+        self.tableframe5.place_forget()
+        self.tableframe6.place_forget()
+        self.tableframe7.place_forget()
+        self.returnframe.place_forget()
+        self.searchframe.place_forget()
+        self.tableframe2.place_forget()
+        self.tableframe3.place_forget()
+        self.salesframe.place_forget()
+        self.marketfrme.place_forget()
+        self.storesframe.place_forget()
+        self.tableframe.place(self.tableframeinfo)
+        self.formframe.place(self.formframeinfo)
+        self.tableframe1.place_forget()
+        self.formframe1.place_forget()
+        self.itemframe.place_forget()
+
+        scrollbarx = Scrollbar(self.tableframe, orient=HORIZONTAL)
+        scrollbary = Scrollbar(self.tableframe, orient=VERTICAL)
+        self.tree = ttk.Treeview(self.tableframe, columns=("Product ID", "Product Name", "Description"),
+                                 selectmode="browse", height=18,
+                                 yscrollcommand=scrollbary.set, xscrollcommand=scrollbarx.set)
+        self.tree.column('#0', stretch=NO, minwidth=0, width=0)
+        self.tree.column('#1', stretch=NO, minwidth=0, width=100)
+        self.tree.column('#2', stretch=NO, minwidth=0, width=100)
+
+        self.tree.heading('Product ID', text="رقم التاجر", anchor=W)
+        self.tree.heading('Product Name', text="اسم التاجر", anchor=W)
+        self.tree.heading('Description', text="المديونية", anchor=W)
+        self.tree.grid(row=1, column=0, sticky="W")
+        scrollbary.config(command=self.tree.yview)
+        scrollbarx.grid(row=2, column=0, sticky="we")
+        scrollbarx.config(command=self.tree.xview)
+        scrollbary.grid(row=1, column=1, sticky="ns", pady=30)
+
+        self.tree.bind("<<TreeviewSelect>>", self.clickprodtable)
+        self.formframe.focus_set()
+
+        # new
+        self.newitemcode = StringVar()
+        self.newitem = StringVar()
+        self.newitemcat = StringVar()
+
+        l = ['رقم التاجر', "اسم التاجر", "المديونية"]
+        for i in range(0, len(l)):
+            Label(self.formframe, text=l[i], font="Roboto 14 bold", bg="#ffffff").grid(row=i, column=0, pady=15,
+                                                                                       sticky="w")
+        Entry(self.formframe, width=40, textvariable=self.newitemcode, font="roboto 11", bg="#ffffff").grid(row=0,
+                                                                                                            column=1,
+                                                                                                            pady=15,
+                                                                                                            padx=10,
+                                                                                                            ipady=3)
+        Entry(self.formframe, width=40, textvariable=self.newitem, font="roboto 11", bg="#ffffff").grid(row=1, column=1,
+                                                                                                        pady=15,
+                                                                                                        padx=10,
+                                                                                                        ipady=3)
+
+        cat = myentry(self.formframe, width=40, textvariable=self.newitemcat, font="roboto 11", bg="#ffffff")
+        cat.grid(row=2, column=1, pady=15, padx=10, ipady=3)
+
+        self.cur.execute("select merchant_id,merchant_name,debt from merchants")
+        li = self.cur.fetchall()
+        a = []
+        cat.set_completion_list(a)
+        Button(self.formframe, text="اضافة تاجر", height=3, width=8, bd=6, command=self.insertitem,
+               font="roboto 11 bold",
+               bg="#4267b2").grid(row=1,
+                                  column=4,
+                                  pady=10,
+                                  padx=12,
+                                  sticky="w",
+                                  ipadx=10)
+        Button(self.formframe, text="تعديل", height=3, width=8, bd=6, command=self.changeprodtable, bg="#4267b2",
+               font="roboto 11 bold").grid(
+            row=2, column=4, padx=12, pady=10, sticky="w", ipadx=10)
+        Button(self.formframe, text="ازالة", height=3, width=8, bd=6, command=self.delproduct, bg="#4267b2",
+               font="roboto 11 bold").grid(
+            row=2, column=5, padx=12, pady=10, sticky="w", ipadx=10)
+        Button(self.formframe, text="سجل التاجر", height=3, width=8, bd=6, command=self.merchant_history, bg="#4267b2",
+               font="roboto 11 bold").grid(
+            row=1, column=5, padx=12, pady=10, sticky="w", ipadx=10)
+
+        self.getproducts()
+
+    def get_merchant_info(self):
+        ans = ''
+        self.get_merchant_name = self.newitem.get()
+        self.cur.execute(
+            "select * from today_income where name_of_merchant=?", (self.get_merchant_name,))
+        productlist = self.cur.fetchall()
+        for i in productlist:
+            self.tree.insert('', 'end', values=(i))
+            x = 0
+            if str(x) == i[0]:
+                a = self.tree.get_children()
+                ans = a[len(a) - 1]
+
+        return ans
+
+    def merchant_history(self):
+        self.get_merchant_name = self.newitem.get()
+
+        if self.get_merchant_name == "":
+            messagebox.showerror("خطأ", "يجب تحديد اسم التاجر")
+
+        else:
+            self.merchanthistoryw = Tk()
+            width = 1400
+            height = 400
+            screen_width = self.merchanthistoryw.winfo_screenwidth()
+            screen_height = self.merchanthistoryw.winfo_screenheight()
+            x = (screen_width / 2) - (width / 2)
+            y = (screen_height / 2) - (height / 2)
+            self.merchanthistoryw.geometry("%dx%d+%d+%d" % (width, height, x, y))
+            self.history_table_frame = Frame(self.merchanthistoryw, width=1400, height=450, bg="#FFFFFF")
+            self.history_table_frame.place(x=0, y=80)
+            self.history_table_frame_info = self.history_table_frame.place_info()
+
+            scrollbarx = Scrollbar(self.history_table_frame, orient=HORIZONTAL)
+            scrollbary = Scrollbar(self.history_table_frame, orient=VERTICAL)
+            self.tree = ttk.Treeview(self.history_table_frame,
+                                     columns=("merchant_name", "receipt_date", "entered_date", "receipt_id",
+                                              'supervisor', 'receipt_total_price', 'payed', 'remaining',
+                                              'product_name',
+                                              'quantity', 'storeroom', 'piece_price', 'unit_price', 'total_price',
+                                              'discount', 'bonus', 'whole_unite_price', 'sector_unit_price'),
+                                     selectmode="browse", height=16,
+                                     yscrollcommand=scrollbary.set, xscrollcommand=scrollbarx.set)
+            self.tree.column('#0', stretch=NO, minwidth=0, width=10)
+            self.tree.column('#1', stretch=NO, minwidth=0, width=65)
+            self.tree.column('#2', stretch=NO, minwidth=0, width=80)
+            self.tree.column('#3', stretch=NO, minwidth=0, width=80)
+            self.tree.column('#4', stretch=NO, minwidth=0, width=80)
+            self.tree.column('#5', stretch=NO, minwidth=0, width=50)
+            self.tree.column('#6', stretch=NO, minwidth=0, width=80)
+            self.tree.column('#7', stretch=NO, minwidth=0, width=50)
+            self.tree.column('#8', stretch=NO, minwidth=0, width=50)
+            self.tree.column('#9', stretch=NO, minwidth=0, width=100)
+            self.tree.column('#10', stretch=NO, minwidth=0, width=100)
+            self.tree.column('#11', stretch=NO, minwidth=0, width=50)
+            self.tree.column('#12', stretch=NO, minwidth=0, width=80)
+            self.tree.column('#13', stretch=NO, minwidth=0, width=80)
+            self.tree.column('#14', stretch=NO, minwidth=0, width=80)
+            self.tree.column('#15', stretch=NO, minwidth=0, width=80)
+            self.tree.column('#16', stretch=NO, minwidth=0, width=40)
+            self.tree.column('#17', stretch=NO, minwidth=0, width=40)
+
+            self.tree.heading("merchant_name", text="اسم التاجر", anchor=W)
+            self.tree.heading("receipt_date", text="تاريخ الفاتورة", anchor=W)
+            self.tree.heading('entered_date', text="تاريخ الادخال", anchor=W)
+            self.tree.heading('receipt_id', text="رقم الفاتورة", anchor=W)
+            self.tree.heading('supervisor', text="المستلم", anchor=W)
+            self.tree.heading('receipt_total_price', text="اجمالي الفاتورة", anchor=W)
+            self.tree.heading('payed', text="المدفوع", anchor=W)
+            self.tree.heading('remaining', text="الباقي", anchor=W)
+
+            self.tree.heading('product_name', text="اسم الصنف", anchor=W)
+            self.tree.heading('quantity', text="الكمية", anchor=W)
+            self.tree.heading('storeroom', text="رقم المخزن", anchor=W)
+            self.tree.heading('piece_price', text="سعر القطعة", anchor=W)
+            self.tree.heading('unit_price', text="سعر الوحدة", anchor=W)
+            self.tree.heading('total_price', text="سعر الكمية", anchor=W)
+            self.tree.heading('discount', text="الخصم", anchor=W)
+            self.tree.heading('bonus', text="بونص", anchor=W)
+            self.tree.heading('whole_unite_price', text="الوحدة جملة", anchor=W)
+            self.tree.heading('sector_unit_price', text="الوحدة قطاعي", anchor=W)
+
+            self.tree.grid(row=2, column=0, sticky="W")
+            scrollbary.config(command=self.tree.yview)
+            scrollbarx.grid(row=2, column=0, sticky="we")
+            scrollbarx.config(command=self.tree.xview)
+            scrollbary.grid(row=2, column=1, sticky="ns", pady=30)
+
+            self.get_merchant_info()
+
+            self.searchbut = Button(self.merchanthistoryw, text="بحث بالتاريخ", font="roboto 14", bg="#FFFFFF", bd=5,
+                                    command=self.search_merchant_history)
+            self.searchbut.place(x=350, y=10)
+
+            self.searchbut2 = Button(self.merchanthistoryw, text="بحث بالصنف", font="roboto 14", bg='#FFFFFF', bd=5, )
+            self.searchbut2.place(x=270, y=10)
+
+            self.searchvar = StringVar()
+            self.searchentry = Entry(self.merchanthistoryw, textvariable=self.searchvar, font="roboto 14", width=25,
+                                     bg="#FFFFFF")
+            self.searchentry.place(x=520, y=20)
+
+            self.buildprodtable()
+
+            self.merchanthistoryw.mainloop()
+
+    def search_merchant_history(self):
+        # cur.execute("SELECT %s FROM Data where %s=?" % (column, goal), (constrain,))
+        ans = ''
+        try:
+            self.get_date = str(self.searchentry.get())
+        except:
+            messagebox.showerror("خطأ", "من فضلك أدخل التاريخ بشكل صحيح")
+            return
+
+        if self.get_date == "":
+            messagebox.showerror("خطأ", "من فضلك قم بكتابة التاريخ")
+            return
+        self.cur.execute('select * from today_income where datetime_entered=? and name_of_merchant=?',
+                         (self.get_date, self.get_merchant_name))
+        result = self.cur.fetchall()
+        self.income_table()
+        x = 0,
+        for i in result:
+            self.tree.insert('', 'end', values=(i))
+            if str(x) == i[0]:
+                a = self.tree.get_children()
+                ans = a[len(a) - 1]
+
+        self.buildprodtable()
+        return ans
+
+    def serch_merchant_product_history(self):
+
+        # cur.execute("SELECT %s FROM Data where %s=?" % (column, goal), (constrain,))
+        ans = ''
+        try:
+            self.get_product = str(self.searchentry.get())
+        except:
+            messagebox.showerror("خطأ", "من فضلك أدخل اسم الصنف بشكل صحيح")
+            return
+        if self.get_product == "":
+            messagebox.showerror("خطأ", "من فضلك قم بكتابة اسم الصنف")
+            return
+        self.cur.execute('select * from today_income where product_name=? and name_of_merchant=?',
+                         (self.get_product, self.get_merchant_name))
+        result = self.cur.fetchall()
+        self.income_table()
+        x = 0
+        for i in result:
+            self.tree.insert('', 'end', values=(i))
+            if str(x) == i[0]:
+                a = self.tree.get_children()
+                ans = a[len(a) - 1]
+
+        return ans
+
+    def insertitem(self):
+        try:
+            self.newitemcode.set(int(self.newitemcode.get()))
+            self.newitem.set(str(self.newitem.get()).upper())
+            self.newitemcat.set(float(self.newitemcat.get()))
+        except:
+            messagebox.showerror("خطأ", "من فضلك ادخل بيانات صحيحة")
+            return
+
+        if self.newitemcode.get() == '' or self.newitem.get() == '' or self.newitemcat.get() == '':
+            messagebox.showerror("خطأ", "من فضلك ادخل جميع البيانات")
+            return
+
+        else:
+            l = [self.newitemcode.get(), self.newitem.get(), self.newitemcat.get()]
+            for i in range(0, len(l)):
+                if not l[i].isdigit():
+                    if i == 0:
+                        messagebox.showerror("Error", "Product ID should be in numeral")
+                elif int(l[i]) < 0:
+                    messagebox.showerror("Error", "Invalid Data Provided")
+                    return
+        self.cur.execute('select * from merchants where merchant_id = ?', (int(self.newitemcode.get()),))
+        l = self.cur.fetchall()
+        if (len(l) > 0):
+            messagebox.showerror("Error", "Product ID Should Be Unique")
+            return
+
+        x = int(self.newitemcode.get())
+        y = str(self.newitem.get())
+        z = float(self.newitemcat.get())
+        self.cur.execute("insert into merchants values(?,?,?)", (x, y, z))
+        self.newitem.set('')
+        self.newitemcode.set('')
+        self.newitemcat.set('')
+        messagebox.showinfo('Success', 'Item Added Successfully')
+        self.getproducts()
+        self.buildprodtable()
+        self.base.commit()
+
+    # SEARCH FRAME FOR BOTH USER AND PRODUCT TABLE
+    def mainsearch(self, f):
+        self.searchvar.set('')
+
+        if (f == 0):
+            self.searchframe.place(x=661, y=245)
+            self.searchframe.config(width=520)
+            self.searchbut.config(command=self.searchuser)
+            self.searchbut.config(text="البحث عن حساب")
+            self.searchbut.place(x=0, y=23)
+            self.searchentry.config(width=18, textvariable=self.searchvar)
+            self.searchentry.place(x=195, y=25, height=35)
+            self.resetbut.config(command=self.resetusertable)
+            self.resetbut.place(x=415, y=23)
+            self.cur.execute("select username from users")
+            li = self.cur.fetchall()
+            a = []
+            for i in range(0, len(li)):
+                a.append(li[i][0])
+            self.searchentry.set_completion_list(a)
+        else:
+            self.searchframe.place(x=138, y=245)
+            self.searchframe.config(width=520)
+            self.searchbut.config(command=self.searchinvoice)
+            self.searchbut.config(text="Search Invoice No.")
+            self.searchbut.place(x=0, y=23)
+            self.searchentry.config(width=18, textvariable=self.searchvar)
+            self.searchentry.place(x=195, y=25, height=35)
+            self.resetbut.config(command=self.buildsalestable)
+            self.resetbut.place(x=415, y=23)
+            self.cur.execute("select invoice from sales")
+            li = self.cur.fetchall()
+            a = []
+            # print(li)
+            for i in range(0, len(li)):
+                if (a.count(str(li[i][0])) == 0):
+                    a.append(str(li[i][0]))
+            self.searchentry.set_completion_list(a)
+
+    # FETCH PRODUCTS FROM PRODUCTS TABLE
+    def getproducts(self, x=0):
+        ans = ''
+        self.cur.execute("select * from merchants")
+        productlist = self.cur.fetchall()
+        for i in productlist:
+            self.tree.insert('', 'end', values=(i))
+            if str(x) == i[0]:
+                a = self.tree.get_children()
+                ans = a[len(a) - 1]
+
+        return ans
+
+    # MODIFIES RECORD OF PRODUCT TABLE
+    def changeprodtable(self):
+        cur = self.tree.selection()
+        cur = self.tree.item(cur)
+        li = cur['values']
+        self.newitemcode.set(int(self.newitemcode.get()))
+        self.newitem.set(str(self.newitem.get()).upper())
+        self.newitemcat.set(float(self.newitemcat.get()))
+        if (len(li) == 3):
+            if self.newitemcode.get() == '' or self.newitem.get() == '' or self.newitemcat.get() == '':
+                messagebox.showerror("Error", "Invalid Data Provided")
+                return
+
+            self.cur.execute(
+                "update merchants set merchant_name = ?,debt = ? where merchant_id = ?;", (
+                    self.newitem.get(), self.newitemcat.get(), self.newitemcode.get()))
+            self.base.commit()
+            self.tree.delete(*self.tree.get_children())
+            cur = self.getproducts(li[0])
+            self.tree.selection_set(cur)
+        self.newitemcode.set("")
+        self.newitem.set("")
+        self.newitemcat.set("")
+
+    def delproduct(self):
+        cur = self.tree.focus()
+        cur = self.tree.item(cur)
+        li = cur['values']
+        if messagebox.askyesno('Alert!', 'Do you want to remove product from inventory?') == True and len(li) == 3:
+            self.cur.execute("delete from merchants where merchant_id = ?;", (li[0],))
+            self.base.commit()
+            self.tree.delete(*self.tree.get_children())
+            self.getproducts()
+            self.newitemcode.set('')
+            self.newitem.set('')
+            self.newitemcat.set('')
+
+    def searchprod(self):
+        if self.searchvar.get() == '':
+            return
+        self.tree.delete(*self.tree.get_children())
+        self.cur.execute("select * from merchants")
+        li = self.cur.fetchall()
+        for i in li:
+            if (i[1] == self.searchvar.get()):
+                self.tree.insert('', 'end', values=(i))
+
+    def resetprodtabel(self):
+        self.searchvar.set('')
+        self.tree.delete(*self.tree.get_children())
+        self.getproducts()
+
+    # ONCLICK EVENT FOR PRODUCT TABLE
+    def clickprodtable(self, event):
+        cur = self.tree.selection()
+        cur = self.tree.item(cur)
+        li = cur['values']
+        if (len(li) == 3):
+            self.newitemcode.set((li[0]))
+            self.newitem.set((li[1]))
+            self.newitemcat.set((li[2]))
+
+    def Table(self):
+        scrollbarx = Scrollbar(self.tableframe2, orient=HORIZONTAL)
+        scrollbary = Scrollbar(self.tableframe2, orient=VERTICAL)
+        self.tree = ttk.Treeview(self.tableframe2,
+                                 columns=("Product Name", "Description", "Category", "Merchant"),
+                                 selectmode="extended", height=18,
+                                 yscrollcommand=scrollbary.set, xscrollcommand=scrollbarx.set)
+        self.tree.column('#0', stretch=NO, minwidth=0, width=0)
+        self.tree.column('#1', stretch=NO, minwidth=0, width=100)
+        self.tree.column('#2', stretch=NO, minwidth=0, width=80)
+        self.tree.column('#3', stretch=NO, minwidth=0, width=80)
+
+        self.tree.heading('Product Name', text="اسم الصنف", anchor=W)
+        self.tree.heading('Description', text="الكمية", anchor=W)
+        self.tree.heading('Category', text="سعر الكمية", anchor=W)
+        self.tree.heading('Merchant', text="اسم التاجر", anchor=W)
+        self.tree.grid(row=1, column=0, sticky="W")
+        scrollbary.config(command=self.tree.yview)
+        scrollbarx.grid(row=2, column=0, sticky="we")
+        scrollbarx.config(command=self.tree.xview)
+        scrollbary.grid(row=1, column=1, sticky="ns", pady=30)
+
+    # FUNCTION FOR ITEM BUTTON
+    def additems(self):
+        self.merchant = StringVar()
+        self.tableframe6.place_forget()
+        self.tableframe7.place_forget()
+        self.returnframe.place_forget()
+        self.tableframe3.place_forget()
+        self.tableframe4.place_forget()
+        self.tableframe5.place_forget()
+        self.formframe1.place_forget()
+        self.searchframe.place_forget()
+        self.tableframe.place_forget()
+        self.tableframe1.place_forget()
+        self.formframe.place_forget()
+        self.salesframe.place_forget()
+        self.marketfrme.place_forget()
+        self.storesframe.place_forget()
+        self.itemframe.place(self.itemframeinfo)
+        self.tableframe2.place(self.tableframe2info)
+
+        # Label(self.itemframe, text="اختر اسم التاجر",font="robot 20 bold", fg="black", bg="white").grid(row=0, column=3)
+        self.profiles = Entry(self.itemframe, font="robot 14", textvariable=self.merchant)
+        self.profiles.grid(row=0, column=3)
+        self.merchant.set("اختر اسم التاجر")
+
+        # Table for added items
+        self.Table()
+
+        # enteries
+        self.recite_date = Entry(self.itemframe, bg="light gray")
+        self.recite_date.grid(row=4, column=4)
+        self.entered_date = Entry(self.itemframe, bg="light gray")
+        self.entered_date.grid(row=6, column=4)
+        self.recite_id = Entry(self.itemframe, bg="light gray")
+        self.recite_id.grid(row=8, column=4)
+        self.supervisor = Entry(self.itemframe, bg="light gray")
+        self.supervisor.grid(row=10, column=4)
+        self.recite_total_price = Entry(self.itemframe, bg="light gray")
+        self.recite_total_price.grid(row=12, column=4)
+        self.payed = Entry(self.itemframe, bg="light gray")
+        self.payed.grid(row=14, column=4)
+
+        self.product_name = Entry(self.itemframe, bg="light gray")
+        self.product_name.grid(row=4, column=3)
+        self.quantity = Entry(self.itemframe, bg="light gray")
+        self.quantity.grid(row=6, column=3)
+        self.storeroom = Entry(self.itemframe, bg="light gray")
+        self.storeroom.grid(row=8, column=3)
+        self.piece_price = Entry(self.itemframe, bg="light gray")
+        self.piece_price.grid(row=10, column=3)
+        self.unit_price = Entry(self.itemframe, bg="light gray")
+        self.unit_price.grid(row=12, column=3)
+
+        self.total_price = Entry(self.itemframe, bg="light gray")
+        self.total_price.grid(row=4, column=2)
+        self.discount = Entry(self.itemframe, bg="light gray")
+        self.discount.grid(row=6, column=2)
+        self.bonus = Entry(self.itemframe, bg="light gray")
+        self.bonus.grid(row=8, column=2)
+        self.unit_sale_price = Entry(self.itemframe, bg="light gray")
+        self.unit_sale_price.grid(row=10, column=2)
+        self.sector_sale_price = Entry(self.itemframe, bg="light gray")
+        self.sector_sale_price.grid(row=12, column=2)
+
+        today_income = Button(self.itemframe, text="وارد اليوم", font="robot 16 bold", fg="black", bg="#4267b2",
+                              command=self.Today_Income)
+        today_income.grid(row=0, column=5)
+
+        history_income = Button(self.itemframe, text="سجل الوارد", font="robot 16 bold", fg="black", bg="#4267b2",
+                                command=self.income_history)
+        history_income.grid(row=0, column=4)
+
+        add_income = Button(self.itemframe, text="اضافة الصنف", font="robot 16 bold", fg="black", bg="#4267b2",
+                            command=self.Add_Income)
+        add_income.grid(row=0, column=2)
+
+        add_receipt = Button(self.itemframe, text="اضافة الفاتورة", font="robot 16 bold", fg="black", bg="#4267b2",
+                             command=self.Add_Recipte)
+        add_receipt.grid(row=0, column=1)
+
+        delete_item = Button(self.itemframe, text="حذف صنف", font="robot 16 bold", fg="black", bg="#4267b2",
+                             command=self.delete_item)
+        delete_item.grid(row=14, column=2)
+
+        return_item = Button(self.itemframe, text="مرتجعات", font="robot 16 bold", fg="black", bg="#4267b2",
+                             command=self.returns)
+        return_item.grid(row=14, column=1)
+
+        # labels
+
+        self.recite_date_label = Label(self.itemframe, text=":تاريخ الفاتورة          ", font="roboto 14 bold")
+        self.recite_date_label.grid(row=3, column=4)
+        self.entered_date_label = Label(self.itemframe, text=":تاريخ ادخال الفاتورة         ", font="roboto 14 bold")
+        self.entered_date_label.grid(row=5, column=4)
+        self.recite_id_label = Label(self.itemframe, text=":رقم الفاتورة              ", font="roboto 14 bold")
+        self.recite_id_label.grid(row=7, column=4)
+        self.supervisor_label = Label(self.itemframe, text=":اسم المستلم              ", font="roboto 14 bold")
+        self.supervisor_label.grid(row=9, column=4)
+        self.recite_total_price_label = Label(self.itemframe, text=":اجمالي الفاتورة               ",
+                                              font="roboto 14 bold")
+        self.recite_total_price_label.grid(row=11, column=4)
+        self.payed_label = Label(self.itemframe, text=":مدفوع                       ", font="roboto 14 bold")
+        self.payed_label.grid(row=13, column=4)
+
+        self.product_name_label = Label(self.itemframe, text=":اسم الصنف     ", font="roboto 14 bold", bg="#FFFFFF")
+        self.product_name_label.grid(row=3, column=3)
+        self.quantity_label = Label(self.itemframe, text=":الكمية           ", font="roboto 14 bold", bg="#FFFFFF")
+        self.quantity_label.grid(row=5, column=3)
+        self.storeroom_label = Label(self.itemframe, text=":رقم المخزن    ", font="roboto 14 bold", bg="#FFFFFF")
+        self.storeroom_label.grid(row=7, column=3)
+        self.piece_price_label = Label(self.itemframe, text=":سعر القطعة    ", font="roboto 14 bold", bg="#FFFFFF")
+        self.piece_price_label.grid(row=9, column=3)
+        self.unit_price_label = Label(self.itemframe, text=":سعر الوحدة           ", font="roboto 14 bold",
+                                      bg="#FFFFFF")
+
+        self.unit_price_label.grid(row=11, column=3)
+
+        self.total_price_label = Label(self.itemframe, text=":سعر الكمية           ", font="roboto 14 bold",
+                                       bg="#FFFFFF")
+        self.total_price_label.grid(row=3, column=2)
+        self.discount_label = Label(self.itemframe, text=":الخصم                 ", font="roboto 14 bold", bg="#FFFFFF")
+        self.discount_label.grid(row=5, column=2)
+        self.bonus_label = Label(self.itemframe, text=":بونص                 ", font="roboto 14 bold", bg="#FFFFFF")
+        self.bonus_label.grid(row=7, column=2)
+        self.unit_sale_price_label = Label(self.itemframe, text=":سعر الوحدة جملة    ", font="roboto 14 bold",
+                                           bg="#FFFFFF")
+        self.unit_sale_price_label.grid(row=9, column=2)
+        self.sector_sale_price_label = Label(self.itemframe, text=":سعر الوحدة قطاعي  ", font="roboto 14 bold",
+                                             bg="#FFFFFF")
+        self.sector_sale_price_label.grid(row=11, column=2)
+
+    def returns(self):
+        self.formframe1.place_forget()
+        self.searchframe.place_forget()
+        self.tableframe.place_forget()
+        self.tableframe1.place_forget()
+        self.formframe.place_forget()
+        self.itemframe.place_forget()
+        self.tableframe2.place_forget()
+        self.salesframe.place_forget()
+        self.marketfrme.place_forget()
+        self.storesframe.place_forget()
+        self.returnframe.place(self.returnframeinfo)
+        self.tableframe3.place(self.tableframe3info)
+        self.tableframe4.place_forget()
+        self.tableframe5.place_forget()
+        self.tableframe6.place_forget()
+        self.tableframe7.place_forget()
+
+        self.return_table()
+
+        self.return_merchant = Entry(self.returnframe, bg="light gray")
+        self.return_merchant.grid(row=2, column=7)
+
+        self.return_date = Entry(self.returnframe, bg="light gray")
+        self.return_date.grid(row=4, column=7)
+
+        self.return_recite_id = Entry(self.returnframe, bg="light gray")
+        self.return_recite_id.grid(row=6, column=7)
+
+        self.return_product_name = Entry(self.returnframe, bg="light gray")
+        self.return_product_name.grid(row=8, column=7)
+        self.return_quantity = Entry(self.returnframe, bg="light gray")
+        self.return_quantity.grid(row=10, column=7)
+        self.return_total_price = Entry(self.returnframe, bg="light gray")
+        self.return_total_price.grid(row=12, column=7)
+
+        self.return_merchant_label = Label(self.returnframe, text=":اسم التاجر          ", font="roboto 14 bold")
+        self.return_merchant_label.grid(row=1, column=7)
+        self.return_date_label = Label(self.returnframe, text=":تاريخ الارجاع         ", font="roboto 14 bold")
+        self.return_date_label.grid(row=3, column=7)
+        self.return_recite_id_label = Label(self.returnframe, text=":رقم الفاتورة              ", font="roboto 14 bold")
+        self.return_recite_id_label.grid(row=5, column=7)
+        self.return_product_name_label = Label(self.returnframe, text=":اسم الصنف        ", font="roboto 14 bold")
+        self.return_product_name_label.grid(row=7, column=7)
+        self.return_quantity_label = Label(self.returnframe, text=":الكمية المرتجعة        ",
+                                           font="roboto 14 bold")
+        self.return_quantity_label.grid(row=9, column=7)
+        self.return_total_price_label = Label(self.returnframe, text=":سعر الكمية المرتجعة              ",
+                                              font="roboto 14 bold")
+        self.return_total_price_label.grid(row=11, column=7)
+
+        self.return_product_button = Button(self.returnframe, text="اضافة الصنف", font="robot 16 bold", fg="black",
+                                            bg="#4267b2", width=18, command=self.Returened_product)
+        self.return_product_button.grid(row=1, column=0)
+
+        self.return_recite_button = Button(self.returnframe, text="اضافة للمرتجعات", font="robot 16 bold", fg="black",
+                                           bg="#4267b2", width=18, command=self.return_recite)
+        self.return_recite_button.grid(row=3, column=0)
+
+        self.return_history_button = Button(self.returnframe, text="سجل المرتجعات", font="robot 16 bold", fg="black",
+                                            bg="#4267b2", width=18, command=self.return_history)
+        self.return_history_button.grid(row=5, column=0)
+
+    def return_table(self):
+        scrollbarx = Scrollbar(self.tableframe3, orient=HORIZONTAL)
+        scrollbary = Scrollbar(self.tableframe3, orient=VERTICAL)
+        self.tree = ttk.Treeview(self.tableframe3,
+                                 columns=("Merchant", "Product Name", "Description", "Category"),
+                                 selectmode="extended", height=18,
+                                 yscrollcommand=scrollbary.set, xscrollcommand=scrollbarx.set)
+        self.tree.column('#0', stretch=NO, minwidth=0, width=0)
+        self.tree.column('#1', stretch=NO, minwidth=0, width=100)
+        self.tree.column('#2', stretch=NO, minwidth=0, width=80)
+        self.tree.column('#3', stretch=NO, minwidth=0, width=80)
+
+        self.tree.heading('Merchant', text="اسم التاجر", anchor=W)
+        self.tree.heading('Product Name', text="اسم الصنف", anchor=W)
+        self.tree.heading('Description', text="الكمية", anchor=W)
+        self.tree.heading('Category', text="سعر الكمية", anchor=W)
+
+        self.tree.grid(row=0, column=2, sticky="W")
+        scrollbary.config(command=self.tree.yview)
+        scrollbarx.grid(row=1, column=2, sticky="we")
+        scrollbarx.config(command=self.tree.xview)
+        scrollbary.grid(row=0, column=3, sticky="ns", pady=30)
+
+    def Returened_product(self):
+        self.cur.execute("select merchant_name from merchants;")
+        names = self.cur.fetchall()
+        merchant_list = names
+        merchant_list = ([tup[0] for tup in merchant_list])
+
+        self.cur.execute("select recite_id from today_income;")
+        id = self.cur.fetchall()
+        id_list = id
+        id_list = ([tup[0] for tup in id_list])
+
+        try:
+            self.returned_merchant = str(self.return_merchant.get())
+            self.return_id = int(self.return_recite_id.get())
+            self.returned_date = str(self.return_date.get())
+            self.returned_product_name = str(self.return_product_name.get())
+            self.returned_quantity = int(self.return_quantity.get())
+            self.returned_price = float(self.return_total_price.get())
+        except:
+            messagebox.showerror("خطأ", "من فضلك قم بادخال كل المعلومات صحيحة")
+            return
+
+        if self.returned_merchant not in merchant_list:
+            messagebox.showerror("خطأ", "هذا الاسم غير موجود بقائمة التجار!")
+            return
+
+        if self.return_id not in id_list:
+            messagebox.showerror("خطأ", "هذه الفاتورة غير مسجلة بقائمة الوارد!")
+            return
+
+        if self.returned_merchant == '' or self.return_id == '' or self.returned_date == '':
+            messagebox.showerror("خطأ", "من فضلك قم بادخال كل المعلومات صحيحة")
+            return
+        elif self.returned_product_name == '' or self.returned_quantity == '' or self.returned_price == '':
+            messagebox.showerror("خطأ", "من فضلك قم بادخال كل المعلومات صحيحة")
+            return
+
+        self.cur.execute("create table if not exists returns"
+                         "(return_merchant_name varchar(30) not null,"
+                         "return_date varchar(30) not null,"
+                         "return_recite_id int,"
+                         "return_product_name varchar(30) not null,"
+                         "return_quantity int not null,"
+                         "return_total_price float not null,"
+                         "FOREIGN KEY (return_merchant_name) REFERENCES merchants(merchant_name));")
+
+        self.cur.execute("insert into returns values(?,?,?,?,?,?)", (
+            str(self.returned_merchant),
+            str(self.returned_date),
+            int(self.return_id),
+            str(self.returned_product_name),
+            int(self.returned_quantity),
+            float(self.returned_price)))
+
+        self.base.commit()
+
+        ans = ''
+        self.return_table()
+        self.cur.execute(
+            "select return_merchant_name, return_product_name, return_quantity, return_total_price from returns;")
+        productlist = self.cur.fetchall()
+        x = 0
+        for i in productlist:
+            self.tree.insert('', 'end', values=(i))
+            if str(x) == i[0]:
+                a = self.tree.get_children()
+                ans = a[len(a) - 1]
+
+        return ans
+
+    def return_recite(self):
+        if messagebox.askyesno("تنبيه", "هل تريد ارجاع الأصناف التالية") == True:
+            self.cur.execute("create table if not exists returns_history"
+                             "(return_merchant_name varchar(30) not null,"
+                             "return_date varchar(30) not null,"
+                             "return_recite_id int,"
+                             "return_product_name varchar(30) not null,"
+                             "return_quantity int not null,"
+                             "return_total_price float not null,"
+                             "FOREIGN KEY (return_merchant_name) REFERENCES merchants(merchant_name));")
+            self.cur.execute("INSERT INTO returns_history select * FROM returns;")
+            self.cur.execute("delete from returns;")
+            self.returns()
+
+    def return_history(self):
+        self.return_history_w = Tk()
+        width = 1000
+        height = 400
+        screen_width = self.return_history_w.winfo_screenwidth()
+        screen_height = self.return_history_w.winfo_screenheight()
+        x = (screen_width / 2) - (width / 2)
+        y = (screen_height / 2) - (height / 2)
+        self.return_history_w.geometry("%dx%d+%d+%d" % (width, height, x, y))
+
+        scrollbarx = Scrollbar(self.return_history_w, orient=HORIZONTAL)
+        scrollbary = Scrollbar(self.return_history_w, orient=VERTICAL)
+        self.tree = ttk.Treeview(self.return_history_w,
+                                 columns=("Merchant", "Date", "Id", "Product Name", "Description", "Category"),
+                                 selectmode="extended", height=18,
+                                 yscrollcommand=scrollbary.set, xscrollcommand=scrollbarx.set)
+        self.tree.column('#0', stretch=NO, minwidth=0, width=0)
+        self.tree.column('#1', stretch=NO, minwidth=0, width=80)
+        self.tree.column('#2', stretch=NO, minwidth=0, width=80)
+        self.tree.column('#3', stretch=NO, minwidth=0, width=80)
+        self.tree.column('#4', stretch=NO, minwidth=0, width=80)
+        self.tree.column('#5', stretch=NO, minwidth=0, width=80)
+
+        self.tree.heading('Merchant', text="اسم التاجر", anchor=W)
+        self.tree.heading('Date', text="تاريخ الارجاع", anchor=W)
+        self.tree.heading('Id', text="رقم الفاتورة", anchor=W)
+        self.tree.heading('Product Name', text="اسم الصنف", anchor=W)
+        self.tree.heading('Description', text="الكمية", anchor=W)
+        self.tree.heading('Category', text="سعر الكمية", anchor=W)
+
+        self.tree.grid(row=1, column=1, sticky="W")
+        scrollbary.config(command=self.tree.yview)
+        scrollbarx.grid(row=2, column=1, sticky="we")
+        scrollbarx.config(command=self.tree.xview)
+        scrollbary.grid(row=1, column=2, sticky="ns", pady=30)
+        self.insertion()
+        self.return_history_w.mainloop()
+
+    def insertion(self):
+        self.cur.execute("select * from returns_history;")
+        productlist = self.cur.fetchall()
+        x = 0
+        ans = ''
+        for i in productlist:
+            self.tree.insert('', 'end', values=i)
+            if str(x) == i[0]:
+                a = self.tree.get_children()
+                ans = a[len(a) - 1]
+        return ans
+
+    def Get(self, x=0):
+        ans = ''
+        self.Table()
+        self.cur.execute(
+            "select product_name, product_quantity, product_total_price, name_of_merchant from new_income;")
+        productlist = self.cur.fetchall()
+        for i in productlist:
+            self.tree.insert('', 'end', values=(i))
+            if str(x) == i[0]:
+                a = self.tree.get_children()
+                ans = a[len(a) - 1]
+
+        return ans
+
+    def Add_Income(self):
+        self.cur.execute('CREATE TABLE if not exists merchants'
+                         "(merchant_id INTEGER,"
+                         "merchant_name VARCHAR(25),"
+                         "debt float,"
+                         "PRIMARY KEY (merchant_id, merchant_name));")
+        # self.cur.execute("INSERT INTO merchants_copy select * FROM merchants;")
+        # self.cur.execute("DROP TABLE new_income;")
+        # self.cur.execute("ALTER TABLE merchants_copy RENAME TO merchants;")
+
+        self.cur.execute("CREATE TABLE if not exists new_income"
+                         "(name_of_merchant varchar(25) NOT NULL,"
+                         "datetime_recite varchar(25) NOT NULL,"
+                         "datetime_entered varchar(25) NOT NULL,"
+                         "recite_id INTEGER NOT NULL,"
+                         "supervisor varchar (30) NOT NULL,"
+                         "recite_total_price FLOAT NOT NULL,"
+                         "payed FLOAT NOT NULL,"
+                         "remaining FLOAT NOT NULL,"
+                         "product_name varchar (50) NOT NULL,"
+                         "product_quantity INTEGER NOT NULL,"
+                         "product_Storeroom INTEGER NOT NULL,"
+                         "product_piece_price FLOAT NOT NULL,"
+                         "product_unit_price FLOAT NOT NULL,"
+                         "product_total_price FLOAT NOT NULL,"
+                         "discount FLOAT,"
+                         "product_bonus INTEGER,"
+                         "product_whole_unit_price FLOAT NOT NULL,"
+                         "product_sector_unit_price FLOAT NOT NULL,"
+                         "FOREIGN KEY (name_of_merchant) REFERENCES merchants(merchant_name));")
+
+        self.cur.execute("select merchant_name from merchants;")
+        names = self.cur.fetchall()
+        merchant_list = names
+        self.get_merchant = self.profiles.get()
+        merchant_list = ([tup[0] for tup in merchant_list])
+        if self.get_merchant not in merchant_list:
+            messagebox.showerror("خطأ", "هذا الاسم غير موجود بقائمة التجار!")
+            return
+
+        elif self.get_merchant in merchant_list:
+
+            try:
+                self.get_recite_date = str(self.recite_date.get())
+                self.get_recite_id = int(self.recite_id.get())
+                self.get_supervisor = str(self.supervisor.get())
+                self.get_recite_total_price = float(self.recite_total_price.get())
+                self.get_payed = float(self.payed.get())
+                self.get_entered_date = str(self.entered_date.get())
+
+                self.get_product_name = str(self.product_name.get())
+                self.get_quantity = int(self.quantity.get())
+                self.get_storeroom = int(self.storeroom.get())
+                self.get_piece_price = float(self.piece_price.get())
+                self.get_unit_price = float(self.unit_price.get())
+                self.get_total_price = float(self.total_price.get())
+                self.get_discount = float(self.discount.get())
+                self.get_bonus = int(self.bonus.get())
+                self.get_unit_sale_price = float(self.unit_sale_price.get())
+                self.get_sector_sale_price = float(self.sector_sale_price.get())
+            except:
+                messagebox.showerror("خطأ", "من فضلك ادخل بيانات صحيحة")
+                return
+
+            if self.get_recite_date == "" or self.get_recite_id == "" or self.get_supervisor == "":
+                messagebox.showerror("خطأ", "يجب ملأ جميع البيانات")
+            elif self.get_recite_total_price == "" or self.get_payed == "" or self.get_entered_date == "":
+                messagebox.showerror("خطأ", "يجب ملأ جميع البيانات")
+            elif self.get_product_name == "" or self.get_quantity == "":
+                messagebox.showerror("خطأ", "برجاء ادخال جميع البيانات")
+            elif self.get_storeroom == "" or self.get_piece_price == "" or self.get_unit_price == "":
+                messagebox.showerror("خطأ", "برجاء ادخال جميع البيانات")
+            elif self.get_total_price == "" or self.get_discount == "" or self.get_bonus == "":
+                messagebox.showerror("خطأ", "برجاء ادخال جميع البيانات")
+            elif self.get_unit_sale_price == "" or self.get_sector_sale_price == "":
+                messagebox.showerror("خطأ", "برجاء ادخال جميع البيانات")
+            self.remaining = float(self.get_recite_total_price) - float(self.get_payed)
+
+            self.cur.execute('insert into new_income values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', (
+                str(self.get_merchant),
+                str(self.get_recite_date),
+                str(self.get_entered_date),
+                int(self.get_recite_id),
+                str(self.get_supervisor),
+                float(self.get_recite_total_price),
+                float(self.get_payed),
+                float(self.remaining),
+                str(self.get_product_name),
+                int(self.get_quantity),
+                int(self.get_storeroom),
+                float(self.get_piece_price),
+                float(self.get_unit_price),
+                float(self.get_total_price),
+                float(self.get_discount),
+                int(self.get_bonus),
+                float(self.get_unit_sale_price),
+                float(self.get_sector_sale_price)))
+
+            li = [self.get_storeroom, self.get_product_name, self.get_unit_price]
+
+            #self.cur.execute("delete from stores;")
+            self.cur.execute("create table if not exists stores"
+                             "(product_Storeroom integer not null,"
+                             "product_name varchar(30) not null,"
+                             "product_quantity integer not null,"
+                             "product_unit_price float not null);")
+
+
+            self.cur.execute("select product_name from stores;")
+            ex_product = self.cur.fetchall()
+            self.ex_product = ([tup[0] for tup in ex_product])
+
+            if self.get_product_name not in self.ex_product:
+                self.cur.execute("insert into stores select product_Storeroom, product_name, product_quantity,"
+                                 "product_unit_price from new_income;")
+
+            if self.get_product_name in self.ex_product:
+
+                counter = 0
+                self.cur.execute("select product_Storeroom from stores where  "
+                                 "product_Storeroom=? and product_name =? and product_unit_price=?;",
+                                 (int(self.get_storeroom),
+                                  str(self.get_product_name),
+                                  float(self.get_unit_price)))
+                match1 = self.cur.fetchall()
+                self.match1 = ([tup[0] for tup in match1])
+                self.match1 = self.match1[0]
+
+                self.cur.execute("select product_name from stores where  "
+                                 "product_Storeroom=? and product_name =? and product_unit_price=?;",
+                                 (int(self.get_storeroom),
+                                  str(self.get_product_name),
+                                  float(self.get_unit_price)))
+
+                match2 = self.cur.fetchall()
+                self.match2 = ([tup[0] for tup in match2])
+                self.match2 = self.match2[0]
+
+                self.cur.execute("select product_unit_price from stores where  "
+                                 "product_Storeroom=? and product_name =? and product_unit_price=?;",
+                                 (int(self.get_storeroom),
+                                  str(self.get_product_name),
+                                  float(self.get_unit_price)))
+
+                match3 = self.cur.fetchall()
+                self.match3 = ([tup[0] for tup in match3])
+                self.match3 = self.match3[0]
+                self.match = [self.match1, self.match2, self.match3]
+
+                if self.match != "":
+
+                    for i in li:
+                        if i in self.match:
+                            counter += 1
+
+                if counter == 3:
+                    self.cur.execute("select product_quantity from stores where product_name = ? "
+                                     "and product_Storeroom=? "
+                                     "and product_unit_price=?", (str(self.get_product_name),
+                                                                  int(self.get_storeroom),
+                                                                  float(self.get_unit_price)))
+                    old_quantity = self.cur.fetchall()
+                    self.old_quantity = ([tup[0] for tup in old_quantity])
+                    self.old_quantity = self.old_quantity[0]
+
+                    self.new_quantity = int(self.get_quantity + self.old_quantity)
+
+                    self.cur.execute("update stores set product_quantity=? where product_name = ? and product_Storeroom=?"
+                                     "and product_unit_price=?",
+                                     (self.new_quantity,
+                                      str(self.get_product_name),
+                                      int(self.get_storeroom),
+                                      float(self.get_unit_price)))
+
+
+            self.new_text = " "
+            self.product_name.delete(0, END)
+            self.product_name.insert(0, self.new_text)
+
+            self.quantity.delete(0, END)
+            self.quantity.insert(0, self.new_text)
+
+            self.storeroom.delete(0, END)
+            self.storeroom.insert(0, self.new_text)
+
+            self.piece_price.delete(0, END)
+            self.piece_price.insert(0, self.new_text)
+
+            self.unit_price.delete(0, END)
+            self.unit_price.insert(0, self.new_text)
+
+            self.total_price.delete(0, END)
+            self.total_price.insert(0, self.new_text)
+
+            self.discount.delete(0, END)
+            self.discount.insert(0, self.new_text)
+
+            self.bonus.delete(0, END)
+            self.bonus.insert(0, self.new_text)
+
+            self.unit_sale_price.delete(0, END)
+            self.unit_sale_price.insert(0, self.new_text)
+
+            self.sector_sale_price.delete(0, END)
+            self.sector_sale_price.insert(0, self.new_text)
+
+            self.Get()
+
+            self.base.commit()
+
+    def Add_Recipte(self):
+        if messagebox.askyesno("تنبيه", "هل تريد اضافة هذه الفاتورة") == True:
+            # self.cur.execute('drop table today_income;')
+            self.cur.execute("CREATE TABLE if not exists today_income"
+                             "(name_of_merchant varchar(25) NOT NULL,"
+                             "datetime_recite varchar(25) NOT NULL,"
+                             "datetime_entered varchar(25) NOT NULL,"
+                             "recite_id INTEGER NOT NULL,"
+                             "supervisor varchar (30) NOT NULL,"
+                             "recite_total_price FLOAT NOT NULL,"
+                             "payed FLOAT NOT NULL,"
+                             "remaining FLOAT NOT NULL,"
+                             "product_name varchar (50) NOT NULL,"
+                             "product_quantity INTEGER NOT NULL,"
+                             "product_Storeroom INTEGER NOT NULL,"
+                             "product_piece_price FLOAT NOT NULL,"
+                             "product_unit_price FLOAT NOT NULL,"
+                             "product_total_price FLOAT NOT NULL,"
+                             "discount FLOAT,"
+                             "product_bonus INTEGER,"
+                             "product_whole_unit_price FLOAT NOT NULL,"
+                             "product_sector_unit_price FLOAT NOT NULL,"
+                             "FOREIGN KEY (name_of_merchant) REFERENCES merchants(merchant_name));")
+
+            self.cur.execute("INSERT INTO today_income select * FROM new_income;")
+
+            self.cur.execute('select debt from merchants where merchant_name=?', (self.get_merchant,))
+            old_debt = self.cur.fetchall()
+            self.old_debt = ([tup[0] for tup in old_debt])
+            self.old_debt = float(self.old_debt[0])
+            self.new_debt = float(self.old_debt + self.remaining)
+            self.cur.execute('update merchants set debt=? where merchant_name=?', (self.new_debt, self.get_merchant,))
+            #self.cur.execute("drop table stores")
+            self.cur.execute("delete from new_income;")
+
+            self.base.commit()
+            self.new_text = " "
+
+            self.recite_date.delete(0, END)
+            self.recite_date.insert(0, self.new_text)
+            self.entered_date.delete(0, END)
+            self.entered_date.insert(0, self.new_text)
+            self.recite_id.delete(0, END)
+            self.recite_id.insert(0, self.new_text)
+            self.supervisor.delete(0, END)
+            self.supervisor.insert(0, self.new_text)
+            self.recite_total_price.delete(0, END)
+            self.recite_total_price.insert(0, self.new_text)
+            self.payed.delete(0, END)
+            self.payed.insert(0, self.new_text)
+
+            self.Table()
+
+    def Get_today_income(self, x=0):
+        ans = ''
+        today = datetime.date(datetime.now())
+        self.dt_string = str(today.strftime("%d/%m/%Y"))
+        self.today_date = self.dt_string
+        self.cur.execute(
+            "select * from today_income where datetime_entered=?", (self.today_date,))
+        productlist = self.cur.fetchall()
+        for i in productlist:
+            self.tree.insert('', 'end', values=(i))
+            if str(x) == i[0]:
+                a = self.tree.get_children()
+                ans = a[len(a) - 1]
+
+        return ans
+
+    def Today_Income(self):
+        self.todayincomew = Tk()
+        width = 1400
+        height = 400
+        screen_width = self.todayincomew.winfo_screenwidth()
+        screen_height = self.todayincomew.winfo_screenheight()
+        x = (screen_width / 2) - (width / 2)
+        y = (screen_height / 2) - (height / 2)
+        self.todayincomew.geometry("%dx%d+%d+%d" % (width, height, x, y))
+
+        scrollbarx = Scrollbar(self.todayincomew, orient=HORIZONTAL)
+        scrollbary = Scrollbar(self.todayincomew, orient=VERTICAL)
+        self.tree = ttk.Treeview(self.todayincomew,
+                                 columns=("merchant_name", "receipt_date", "entered_date", "receipt_id",
+                                          'supervisor', 'receipt_total_price', 'payed', 'remaining',
+                                          'product_name',
+                                          'quantity', 'storeroom', 'piece_price', 'unit_price', 'total_price',
+                                          'discount', 'bonus', 'whole_unite_price', 'sector_unit_price'),
+                                 selectmode="browse", height=16,
+                                 yscrollcommand=scrollbary.set, xscrollcommand=scrollbarx.set)
+        self.tree.column('#0', stretch=NO, minwidth=0, width=10)
+        self.tree.column('#1', stretch=NO, minwidth=0, width=65)
+        self.tree.column('#2', stretch=NO, minwidth=0, width=80)
+        self.tree.column('#3', stretch=NO, minwidth=0, width=80)
+        self.tree.column('#4', stretch=NO, minwidth=0, width=80)
+        self.tree.column('#5', stretch=NO, minwidth=0, width=50)
+        self.tree.column('#6', stretch=NO, minwidth=0, width=80)
+        self.tree.column('#7', stretch=NO, minwidth=0, width=50)
+        self.tree.column('#8', stretch=NO, minwidth=0, width=50)
+        self.tree.column('#9', stretch=NO, minwidth=0, width=100)
+        self.tree.column('#10', stretch=NO, minwidth=0, width=100)
+        self.tree.column('#11', stretch=NO, minwidth=0, width=50)
+        self.tree.column('#12', stretch=NO, minwidth=0, width=80)
+        self.tree.column('#13', stretch=NO, minwidth=0, width=80)
+        self.tree.column('#14', stretch=NO, minwidth=0, width=80)
+        self.tree.column('#15', stretch=NO, minwidth=0, width=80)
+        self.tree.column('#16', stretch=NO, minwidth=0, width=40)
+        self.tree.column('#17', stretch=NO, minwidth=0, width=40)
+
+        self.tree.heading("merchant_name", text="اسم التاجر", anchor=W)
+        self.tree.heading("receipt_date", text="تاريخ الفاتورة", anchor=W)
+        self.tree.heading('entered_date', text="تاريخ الادخال", anchor=W)
+        self.tree.heading('receipt_id', text="رقم الفاتورة", anchor=W)
+        self.tree.heading('supervisor', text="المستلم", anchor=W)
+        self.tree.heading('receipt_total_price', text="اجمالي الفاتورة", anchor=W)
+        self.tree.heading('payed', text="المدفوع", anchor=W)
+        self.tree.heading('remaining', text="الباقي", anchor=W)
+        self.tree.heading('product_name', text="اسم الصنف", anchor=W)
+        self.tree.heading('quantity', text="الكمية", anchor=W)
+        self.tree.heading('storeroom', text="رقم المخزن", anchor=W)
+        self.tree.heading('piece_price', text="سعر القطعة", anchor=W)
+        self.tree.heading('unit_price', text="سعر الوحدة", anchor=W)
+        self.tree.heading('total_price', text="سعر الكمية", anchor=W)
+        self.tree.heading('discount', text="الخصم", anchor=W)
+        self.tree.heading('bonus', text="بونص", anchor=W)
+        self.tree.heading('whole_unite_price', text="الوحدة جملة", anchor=W)
+        self.tree.heading('sector_unit_price', text="الوحدة قطاعي", anchor=W)
+
+        self.tree.grid(row=2, column=0, sticky="W")
+        scrollbary.config(command=self.tree.yview)
+        scrollbarx.grid(row=2, column=0, sticky="we")
+        scrollbarx.config(command=self.tree.xview)
+        scrollbary.grid(row=2, column=1, sticky="ns", pady=30)
+
+        self.Get_today_income()
+
+        self.todayincomew.mainloop()
+
+    def Get_history_income(self, x=0):
+        ans = ''
+        self.cur.execute(
+            "select * from today_income;")
+        productlist = self.cur.fetchall()
+        for i in productlist:
+            self.tree.insert('', 'end', values=(i))
+            if str(x) == i[0]:
+                a = self.tree.get_children()
+                ans = a[len(a) - 1]
+
+        return ans
+
+    def income_table(self):
+        scrollbarx = Scrollbar(self.history_table_frame, orient=HORIZONTAL)
+        scrollbary = Scrollbar(self.history_table_frame, orient=VERTICAL)
+        self.tree = ttk.Treeview(self.history_table_frame,
+                                 columns=("merchant_name", "receipt_date", "entered_date", "receipt_id",
+                                          'supervisor', 'receipt_total_price', 'payed', 'remaining',
+                                          'product_name',
+                                          'quantity', 'storeroom', 'piece_price', 'unit_price', 'total_price',
+                                          'discount', 'bonus', 'whole_unite_price', 'sector_unit_price'),
+                                 selectmode="browse", height=16,
+                                 yscrollcommand=scrollbary.set, xscrollcommand=scrollbarx.set)
+        self.tree.column('#0', stretch=NO, minwidth=0, width=10)
+        self.tree.column('#1', stretch=NO, minwidth=0, width=65)
+        self.tree.column('#2', stretch=NO, minwidth=0, width=80)
+        self.tree.column('#3', stretch=NO, minwidth=0, width=80)
+        self.tree.column('#4', stretch=NO, minwidth=0, width=80)
+        self.tree.column('#5', stretch=NO, minwidth=0, width=50)
+        self.tree.column('#6', stretch=NO, minwidth=0, width=80)
+        self.tree.column('#7', stretch=NO, minwidth=0, width=50)
+        self.tree.column('#8', stretch=NO, minwidth=0, width=50)
+        self.tree.column('#9', stretch=NO, minwidth=0, width=100)
+        self.tree.column('#10', stretch=NO, minwidth=0, width=100)
+        self.tree.column('#11', stretch=NO, minwidth=0, width=50)
+        self.tree.column('#12', stretch=NO, minwidth=0, width=80)
+        self.tree.column('#13', stretch=NO, minwidth=0, width=80)
+        self.tree.column('#14', stretch=NO, minwidth=0, width=80)
+        self.tree.column('#15', stretch=NO, minwidth=0, width=80)
+        self.tree.column('#16', stretch=NO, minwidth=0, width=40)
+        self.tree.column('#17', stretch=NO, minwidth=0, width=40)
+
+        self.tree.heading("merchant_name", text="اسم التاجر", anchor=W)
+        self.tree.heading("receipt_date", text="تاريخ الفاتورة", anchor=W)
+        self.tree.heading('entered_date', text="تاريخ الادخال", anchor=W)
+        self.tree.heading('receipt_id', text="رقم الفاتورة", anchor=W)
+        self.tree.heading('supervisor', text="المستلم", anchor=W)
+        self.tree.heading('receipt_total_price', text="اجمالي الفاتورة", anchor=W)
+        self.tree.heading('payed', text="المدفوع", anchor=W)
+        self.tree.heading('remaining', text="الباقي", anchor=W)
+
+        self.tree.heading('product_name', text="اسم الصنف", anchor=W)
+        self.tree.heading('quantity', text="الكمية", anchor=W)
+        self.tree.heading('storeroom', text="رقم المخزن", anchor=W)
+        self.tree.heading('piece_price', text="سعر القطعة", anchor=W)
+        self.tree.heading('unit_price', text="سعر الوحدة", anchor=W)
+        self.tree.heading('total_price', text="سعر الكمية", anchor=W)
+        self.tree.heading('discount', text="الخصم", anchor=W)
+        self.tree.heading('bonus', text="بونص", anchor=W)
+        self.tree.heading('whole_unite_price', text="الوحدة جملة", anchor=W)
+        self.tree.heading('sector_unit_price', text="الوحدة قطاعي", anchor=W)
+        self.tree.grid(row=2, column=0, sticky="W")
+        scrollbary.config(command=self.tree.yview)
+        scrollbarx.grid(row=2, column=0, sticky="we")
+        scrollbarx.config(command=self.tree.xview)
+        scrollbary.grid(row=2, column=1, sticky="ns", pady=30)
+
+    def income_history(self):
+        self.historyincomew = Tk()
+        width = 1400
+        height = 600
+        screen_width = self.historyincomew.winfo_screenwidth()
+        screen_height = self.historyincomew.winfo_screenheight()
+        x = (screen_width / 2) - (width / 2)
+        y = (screen_height / 2) - (height / 2)
+        self.historyincomew.geometry("%dx%d+%d+%d" % (width, height, x, y))
+
+        self.history_table_frame = Frame(self.historyincomew, width=1400, height=450, bg="#FFFFFF")
+        self.history_table_frame.place(x=0, y=80)
+        self.history_table_frame_info = self.searchframe.place_info()
+        self.searchbut = Button(self.historyincomew, text="بحث بالتاريخ", font="roboto 14", bg="#FFFFFF", bd=5,
+                                command=self.search_history)
+        self.searchbut.place(x=400, y=10)
+
+        self.searchbut2 = Button(self.historyincomew, text="بحث بالصنف", font="roboto 14", bg="#FFFFFF", bd=5,
+                                 command=self.search_product)
+        self.searchbut2.place(x=270, y=10)
+
+        self.searchvar = StringVar()
+        self.searchentry = Entry(self.historyincomew, textvariable=self.searchvar, font="roboto 14", width=25,
+                                 bg="#FFFFFF")
+        self.searchentry.place(x=520, y=20)
+
+        self.delete_item = Button(self.historyincomew, text="حذف فاتورة", font="robot 16 bold", fg="black",
+                                  bg="#4267b2",
+                                  command=self.delete_recipt)
+        self.delete_item.place(x=820, y=10)
+        self.income_table()
+
+        self.Get_history_income()
+
+        self.historyincomew.mainloop()
+
+    def search_history(self):
+        # cur.execute("SELECT %s FROM Data where %s=?" % (column, goal), (constrain,))
+        ans = ''
+        try:
+            self.get_date = str(self.searchentry.get())
+        except:
+            messagebox.showerror("خطأ", "من فضلك أدخل التاريخ بشكل صحيح")
+            return
+        if self.get_date == "":
+            messagebox.showerror("خطأ", "من فضلك قم بكتابة التاريخ")
+            return
+        self.cur.execute('select * from today_income where datetime_entered=?', (self.get_date,))
+        result = self.cur.fetchall()
+        self.income_table()
+        x = 0
+        for i in result:
+            self.tree.insert('', 'end', values=(i))
+            if str(x) == i[0]:
+                a = self.tree.get_children()
+                ans = a[len(a) - 1]
+
+        return ans
+
+    def search_product(self):
+        # cur.execute("SELECT %s FROM Data where %s=?" % (column, goal), (constrain,))
+        ans = ''
+        try:
+            self.get_product = str(self.searchentry.get())
+        except:
+            messagebox.showerror("خطأ", "من فضلك أدخل اسم الصنف بشكل صحيح")
+            return
+        if self.get_product == "":
+            messagebox.showerror("خطأ", "من فضلك قم بكتابة اسم الصنف")
+            return
+        self.cur.execute('select * from today_income where product_name = ?', (self.get_product,))
+        result = self.cur.fetchall()
+        self.income_table()
+        x = 0
+        for i in result:
+            self.tree.insert('', 'end', values=(i))
+            if str(x) == i[0]:
+                a = self.tree.get_children()
+                ans = a[len(a) - 1]
+
+        return ans
+
+    def delete_item(self):
+        self.delete_item_w = Tk()
+        width = 300
+        height = 100
+        screen_width = self.delete_item_w.winfo_screenwidth()
+        screen_height = self.delete_item_w.winfo_screenheight()
+        x = (screen_width / 2) - (width / 2)
+        y = (screen_height / 2) - (height / 2)
+        self.delete_item_w.geometry("%dx%d+%d+%d" % (width, height, x, y))
+        self.delete_entry = Entry(self.delete_item_w, bg="light grey", font="robot 14")
+        self.delete_entry.grid(row=2, column=1)
+        self.delete_label = Label(self.delete_item_w, text="ادخل اسم الصنف", font="roboto 14 bold", bg="#FFFFFF")
+        self.delete_label.grid(row=2, column=2)
+        self.delete_button = Button(self.delete_item_w, text="حذف", font="robot 16 bold", fg="black", bg="#4267b2",
+                                    command=self.final_delete_item)
+        self.delete_button.grid(row=4, column=1)
+        self.delete_item_w.mainloop()
+
+    def final_delete_item(self):
+        self.get_delete_entry = str(self.delete_entry.get())
+        self.cur.execute("delete from new_income where product_name = ?;", (self.get_delete_entry,))
+        self.base.commit()
+        self.delete_item_w.destroy()
+        self.Get()
+
+    def delete_recipt(self):
+        self.delete_recipt_w = Tk()
+        width = 300
+        height = 100
+        screen_width = self.delete_recipt_w.winfo_screenwidth()
+        screen_height = self.delete_recipt_w.winfo_screenheight()
+        x = (screen_width / 2) - (width / 2)
+        y = (screen_height / 2) - (height / 2)
+        self.delete_recipt_w.geometry("%dx%d+%d+%d" % (width, height, x, y))
+
+        self.delete_entry = Entry(self.delete_recipt_w, bg="light grey", font="robot 14")
+        self.delete_entry.grid(row=2, column=1)
+        self.delete_label = Label(self.delete_recipt_w, text="ادخل رقم الفاتورة", font="roboto 14 bold", bg="#FFFFFF")
+        self.delete_label.grid(row=2, column=2)
+        self.delete_button = Button(self.delete_recipt_w, text="حذف", font="robot 16 bold", fg="black", bg="#4267b2",
+                                    command=self.final_delete_recipt)
+        self.delete_button.grid(row=4, column=1)
+        self.delete_recipt_w.mainloop()
+
+    def update_debt(self):
+        self.old_remaining = ([tup[0] for tup in self.delete_remaining])
+        self.old_remaining = float(self.old_remaining[0])
+        self.cur.execute('select debt from merchants where merchant_name=?', (self.get_merchant,))
+        old_debt = self.cur.fetchall()
+        self.old_debt = ([tup[0] for tup in old_debt])
+        self.old_debt = float(self.old_debt[0])
+        self.new_debt = float(self.old_debt - self.old_remaining)
+        self.cur.execute('update merchants set debt=? where merchant_name=?', (self.new_debt, self.get_merchant,))
+
+    def final_delete_recipt(self):
+        self.get_delete_entry = int(self.delete_entry.get())
+        self.cur.execute("select remaining from today_income where recite_id = ?", (self.get_delete_entry,))
+        self.delete_remaining = self.cur.fetchall()
+        self.cur.execute("delete from today_income where recite_id = ?;", (self.get_delete_entry,))
+        self.base.commit()
+        self.delete_recipt_w.destroy()
+        self.income_table()
+        self.Get_history_income()
+        self.update_debt()
+
+    # PERFOMS CHECK AND ADD'S ITEMS
+
+    # BUILD USER TABLE
+    def buildusertable(self):
+        self.returnframe.place_forget()
+        self.tableframe3.place_forget()
+        self.searchframe.place_forget()
+        self.formframe.place_forget()
+        self.tableframe.place_forget()
+        self.itemframe.place_forget()
+        self.salesframe.place_forget()
+        self.marketfrme.place_forget()
+        self.storesframe.place_forget()
+        self.tableframe4.place_forget()
+        self.tableframe5.place_forget()
+        self.tableframe6.place_forget()
+        self.tableframe7.place_forget()
+        self.formframe1.place(self.formframe1info)
+        self.tableframe1.place(self.tableframe1info)
+        self.tree.delete(*self.tree.get_children())
+        self.tree.grid_remove()
+        self.tree.destroy()
+        scrollbarx = Scrollbar(self.tableframe1, orient=HORIZONTAL)
+        scrollbary = Scrollbar(self.tableframe1, orient=VERTICAL)
+        self.tree = ttk.Treeview(self.tableframe1, columns=("اسم المستخدم", "كلمة المرور", "نوع الحساب"),
+                                 selectmode="browse", height=17, yscrollcommand=scrollbary.set,
+                                 xscrollcommand=scrollbarx.set)
+        self.tree.column('#0', stretch=NO, minwidth=0, width=0)
+        self.tree.column('#1', stretch=NO, minwidth=0, width=170)
+        self.tree.column('#2', stretch=NO, minwidth=0, width=170)
+
+        self.tree.heading('اسم المستخدم', text="اسم المستخدم", anchor=W)
+        self.tree.heading('كلمة المرور', text="كلمة المرور", anchor=W)
+        self.tree.heading('نوع الحساب', text="نوع الحساب", anchor=W)
+        self.tree.grid(row=1, column=0, sticky="W")
+        scrollbary.config(command=self.tree.yview)
+        scrollbarx.grid(row=2, column=0, sticky="we")
+        scrollbarx.config(command=self.tree.xview)
+        scrollbary.grid(row=1, column=1, sticky="ns", pady=30)
+        self.getusers()
+        self.tree.bind("<<TreeviewSelect>>", self.clickusertable)
+        self.formframe1.focus_set()
+        self.usernamedit = StringVar()
+        self.passwordedit = StringVar()
+        self.accedit = StringVar()
+        va = 110
+        l1 = ['اسم المستخدم', 'كلمة المرور', 'نوع الحساب']
+        for i in range(0, 3):
+            Label(self.formframe1, text=l1[i], font="roboto 14 bold", bg="#FFFFFF").place(x=0, y=va)
+            va += 70
+        Entry(self.formframe1, textvariable=self.usernamedit, font="roboto 14", bg="#FFFFFF", width=25,
+              state='readonly').place(x=162, y=105, height=40)
+        Entry(self.formframe1, textvariable=self.passwordedit, font="roboto 14", bg="#FFFFFF", width=25).place(x=162,
+                                                                                                               y=175,
+                                                                                                               height=40)
+        profiles = mycombobox(self.formframe1, font="robot 14", width=23, textvariable=self.accedit)
+        profiles.place(x=162, y=245, height=40)
+        profiles.set_completion_list(['ADMIN', 'USER'])
+        Button(self.formframe1, text="انشاء حساب", font="robot 12 bold", bg="#FFFFFF", bd=5, width=12, height=2,
+               command=self.adduser).place(x=0, y=10)
+        Button(self.formframe1, text="تعديل", font="robot 12 bold", bg="#FFFFFF", bd=5, width=10, height=2,
+               command=self.changeusertable).place(x=145, y=381)
+        Button(self.formframe1, text="ازالة", font="robot 12 bold", bg="#FFFFFF", bd=5, width=10, height=2,
+               command=self.deluser).place(x=345, y=381)
+
+        self.mainsearch(0)
+
+    # FETCH USERS FROM USERS TABLE
+    def getusers(self, x=0):
+        ans = ''
+        self.cur.execute("select * from users")
+        userslist = self.cur.fetchall()
+        for i in userslist:
+            self.tree.insert('', 'end', values=i)
+            if str(x) == i[0]:
+                a = self.tree.get_children()
+                ans = a[len(a) - 1]
+
+        return ans
+
+    def changeusertable(self):
+        cur = self.tree.selection()
+        cur = self.tree.item(cur)
+        li = cur['values']
+        self.usernamedit.set((self.usernamedit.get()).upper())
+        self.passwordedit.set((self.passwordedit.get()).upper())
+        self.accedit.set((self.accedit.get()).upper())
+        if (len(li) == 3):
+            if self.usernamedit.get() == '' or self.accedit.get() == '':
+                messagebox.showerror("خطأ", "من فضلك ادخل المعلومات كاملة")
+                return
+            if (self.accedit.get() != 'ADMIN' and self.accedit.get() != 'USER'):
+                messagebox.showerror("خطأ", "نوع الحساب غير موجود")
+                return
+            self.cur.execute(
+                "update users set password = ?,account_type = ? where username = ?;", (
+                    self.passwordedit.get(), self.accedit.get(), self.usernamedit.get()))
+            self.base.commit()
+            self.tree.delete(*self.tree.get_children())
+            cur = self.getusers(li[0])
+            self.tree.selection_set(cur)
+
+    def deluser(self):
+        cur = self.tree.focus()
+        cur = self.tree.item(cur)
+        li = cur['values']
+        fa = 0
+        if (self.username.get() == li[0]):
+            if messagebox.askyesno("تنبيه", "هل تريد مسح هذا الحساب؟"):
+                fa = 1
+            else:
+                return
+        if messagebox.askyesno("تنبيه", "هل تريد مسح هذا الحساب؟") == True and len(li) == 3:
+            self.cur.execute("delete from users where username = ?;", (li[0],))
+            self.base.commit()
+            self.tree.delete(*self.tree.get_children())
+            self.getusers()
+            self.usernamedit.set('')
+            self.passwordedit.set('')
+            self.accedit.set('')
+        if (fa == 1):
+            self.change_user()
+
+    def adduser(self):
+        self.reguser()
+        self.loginw.state('normal')  # LOGIN WINDOW ENTERS
+
+    def searchuser(self):
+        if self.searchvar.get() == '':
+            return
+        self.tree.delete(*self.tree.get_children())
+        self.cur.execute("select * from users")
+        li = self.cur.fetchall()
+        for i in li:
+            if (i[0] == self.searchvar.get()):
+                self.tree.insert('', 'end', values=(i))
+
+    def resetusertable(self):
+        self.searchvar.set('')
+        self.tree.delete(*self.tree.get_children())
+        self.getusers()
+
+    def clickusertable(self, event):
+        cur = self.tree.selection()
+        cur = self.tree.item(cur)
+        li = cur['values']
+        if (len(li) == 3):
+            self.usernamedit.set((li[0]))
+            self.passwordedit.set((li[1]))
+            self.accedit.set((li[2]))
+
+    # BUILD SALES TABLE
+    def buildsalestable(self):
+        self.returnframe.place_forget()
+        self.tableframe3.place_forget()
+        self.searchframe.place_forget()
+        self.formframe.place_forget()
+        self.tableframe6.place_forget()
+        self.tableframe7.place_forget()
+        self.tableframe.place_forget()
+        self.itemframe.place_forget()
+        self.formframe1.place_forget()
+        self.salesframe.place_forget()
+        self.marketfrme.place_forget()
+        self.storesframe.place_forget()
+        self.tableframe4.place_forget()
+        self.tableframe5.place_forget()
+        self.tableframe1.place(x=1280, y=315, anchor=NE)
+        self.tree.delete(*self.tree.get_children())
+        self.tree.grid_remove()
+        self.tree.destroy()
+        scrollbarx = Scrollbar(self.tableframe1, orient=HORIZONTAL)
+        scrollbary = Scrollbar(self.tableframe1, orient=VERTICAL)
+        self.tree = ttk.Treeview(self.tableframe1,
+                                 columns=("Transaction ID", "Invoice No.", "Product ID", "Description",
+                                          'Quantity', 'Total Price', 'Date', 'Time'), selectmode="browse", height=16,
+                                 yscrollcommand=scrollbary.set, xscrollcommand=scrollbarx.set)
+        self.tree.column('#0', stretch=NO, minwidth=0, width=0)
+        self.tree.column('#1', stretch=NO, minwidth=0, width=140)
+        self.tree.column('#2', stretch=NO, minwidth=0, width=140)
+        self.tree.column('#3', stretch=NO, minwidth=0, width=150)
+        self.tree.column('#4', stretch=NO, minwidth=0, width=170)
+        self.tree.column('#5', stretch=NO, minwidth=0, width=130)
+        self.tree.column('#6', stretch=NO, minwidth=0, width=130)
+        self.tree.column('#7', stretch=NO, minwidth=0, width=130)
+        self.tree.column('#8', stretch=NO, minwidth=0, width=130)
+        self.tree.heading('Transaction ID', text="Transaction ID", anchor=W)
+        self.tree.heading('Invoice No.', text="Invoice No.", anchor=W)
+        self.tree.heading('Product ID', text="Product ID", anchor=W)
+        self.tree.heading('Description', text="Description", anchor=W)
+        self.tree.heading('Quantity', text="Quantity", anchor=W)
+        self.tree.heading('Total Price', text="Total Price", anchor=W)
+        self.tree.heading('Date', text="Date", anchor=W)
+        self.tree.heading('Time', text="Time", anchor=W)
+        self.tree.grid(row=1, column=0, sticky="W")
+        scrollbary.config(command=self.tree.yview)
+        scrollbarx.grid(row=2, column=0, sticky="we")
+        scrollbarx.config(command=self.tree.xview)
+        scrollbary.grid(row=1, column=1, sticky="ns", pady=30)
+        self.getsales()
+        self.mainsearch(2)
+        self.totalsales = Label(self.tableframe1, text="Total Sales", font="roboto 14 bold").place(x=0, y=400)
+
+    def getsales(self):
+        self.cur.execute("select * from sales")
+        saleslist = self.cur.fetchall()
+        for i in range(0, len(saleslist)):
+            saleslist[i] = list(saleslist[i])
+            self.cur.execute("select product_desc,product_price from products where product_id=?",
+                             (int(saleslist[i][2]),))
+            l = self.cur.fetchall()
+            s = (str(saleslist[i][4])).split('-')
+            #  print(saleslist[i])
+            saleslist[i][4] = s[2] + " - " + s[1] + " - " + s[0]
+            saleslist[i] = [saleslist[i][0], saleslist[i][1], saleslist[i][2], l[0][0], saleslist[i][3],
+                            l[0][1] * (int(saleslist[i][3])), saleslist[i][4], saleslist[i][5]]
+            saleslist[i] = tuple(saleslist[i])
+        for i in saleslist:
+            self.tree.insert('', 'end', values=(i))
+
+    def searchinvoice(self):
+        if self.searchvar.get() == '':
+            return
+        self.tree.delete(*self.tree.get_children())
+        self.cur.execute("select * from sales")
+        saleslist = self.cur.fetchall()
+        for i in range(0, len(saleslist)):
+            saleslist[i] = list(saleslist[i])
+            self.cur.execute("select merchant_name,debt from merchants where merchant_id=?",
+                             (int(saleslist[i][2]),))
+            l = self.cur.fetchall()
+            s = (str(saleslist[i][4])).split('-')
+            saleslist[i][4] = s[2] + " - " + s[1] + " - " + s[0]
+            saleslist[i] = [saleslist[i][0], saleslist[i][1], saleslist[i][2], l[0][0], saleslist[i][3],
+                            l[0][1] * (int(saleslist[i][3])),
+                            saleslist[i][4], saleslist[i][5]]
+            saleslist[i] = tuple(saleslist[i])
+        for j in saleslist:
+            if (str(j[1]) == str(self.searchvar.get())):
+                self.tree.insert('', 'end', values=(j))
+
+    def sales(self):
+        self.returnframe.place_forget()
+        self.tableframe6.place_forget()
+        self.tableframe7.place_forget()
+        self.searchframe.place_forget()
+        self.tableframe2.place_forget()
+        self.tableframe3.place_forget()
+        self.marketfrme.place_forget()
+        self.storesframe.place_forget()
+        self.tableframe.place_forget()
+        self.formframe.place_forget()
+        self.tableframe1.place_forget()
+        self.formframe1.place_forget()
+        self.itemframe.place_forget()
+        self.tableframe4.place_forget()
+        self.tableframe5.place_forget()
+        self.salesframe.place(self.salesframeinfo)
+        self.marketFun()
+
+        self.stores_button = Button(self.salesframe, text="مخازن", width=18, font="robot 15 bold", bg="#4267b2", bd=5,
+                                    command=self.storesFun)
+        self.stores_button.grid(row=0, column=3)
+        Label(self.salesframe, text="  ", bg="white").grid(row=0, column=4)
+        self.market_button = Button(self.salesframe, text="ماركت", width=18, font="robot 15 bold", bg="#4267b2", bd=5,
+                                    command=self.marketFun)
+        self.market_button.grid(row=0, column=5)
+
+    def table4(self):
+        scrollbarx = Scrollbar(self.tableframe4, orient=HORIZONTAL)
+        scrollbary = Scrollbar(self.tableframe4, orient=VERTICAL)
+        self.tree = ttk.Treeview(self.tableframe4,
+                                 columns=("Merchant", "Date", "Id", "Product Name"),
+                                 selectmode="extended", height=18,
+                                 yscrollcommand=scrollbary.set, xscrollcommand=scrollbarx.set)
+        self.tree.column('#0', stretch=NO, minwidth=0, width=0)
+        self.tree.column('#1', stretch=NO, minwidth=0, width=80)
+        self.tree.column('#2', stretch=NO, minwidth=0, width=80)
+        self.tree.column('#3', stretch=NO, minwidth=0, width=80)
+
+        self.tree.heading('Merchant', text="رقم المخزن", anchor=W)
+        self.tree.heading('Date', text="اسم الصنف", anchor=W)
+        self.tree.heading('Id', text="الكمية", anchor=W)
+        self.tree.heading('Product Name', text="سعر الوحدة", anchor=W)
+
+        Label(self.tableframe4, ).grid(row=1, column=4)
+        Label(self.tableframe4, ).grid(row=2, column=4)
+        Label(self.tableframe4, ).grid(row=3, column=4)
+
+        self.tree.grid(row=4, column=0, sticky="W")
+        scrollbary.config(command=self.tree.yview)
+        scrollbarx.grid(row=5, column=0, sticky="we")
+        scrollbarx.config(command=self.tree.xview)
+        scrollbary.grid(row=4, column=1, sticky="ns", pady=30)
+
+    def table5(self):
+        scrollbarx = Scrollbar(self.tableframe5, orient=HORIZONTAL)
+        scrollbary = Scrollbar(self.tableframe5, orient=VERTICAL)
+        self.tree = ttk.Treeview(self.tableframe5,
+                                 columns=("Merchant", "Date", "Id", "Product Name"),
+                                 selectmode="extended", height=18,
+                                 yscrollcommand=scrollbary.set, xscrollcommand=scrollbarx.set)
+        self.tree.column('#0', stretch=NO, minwidth=0, width=0)
+        self.tree.column('#1', stretch=NO, minwidth=0, width=80)
+        self.tree.column('#2', stretch=NO, minwidth=0, width=80)
+        self.tree.column('#3', stretch=NO, minwidth=0, width=80)
+
+        self.tree.heading('Merchant', text="رقم المخزن", anchor=W)
+        self.tree.heading('Date', text="اسم الصنف", anchor=W)
+        self.tree.heading('Id', text="الكمية", anchor=W)
+        self.tree.heading('Product Name', text="سعر الكمية بيع", anchor=W)
+
+        self.tree.grid(row=0, column=0, sticky="W")
+        scrollbary.config(command=self.tree.yview)
+        scrollbarx.grid(row=1, column=0, sticky="we")
+        scrollbarx.config(command=self.tree.xview)
+        scrollbary.grid(row=0, column=1, sticky="ns", pady=30)
+
+    def table6(self):
+        scrollbarx = Scrollbar(self.tableframe6, orient=HORIZONTAL)
+        scrollbary = Scrollbar(self.tableframe6, orient=VERTICAL)
+        self.tree = ttk.Treeview(self.tableframe6,
+                                 columns=("Date", "Id", "Product Name"),
+                                 selectmode="extended", height=18,
+                                 yscrollcommand=scrollbary.set, xscrollcommand=scrollbarx.set)
+        self.tree.column('#0', stretch=NO, minwidth=0, width=0)
+        self.tree.column('#1', stretch=NO, minwidth=0, width=80)
+        self.tree.column('#2', stretch=NO, minwidth=0, width=80)
+
+        self.tree.heading('Date', text="اسم الصنف", anchor=W)
+        self.tree.heading('Id', text="الكمية", anchor=W)
+        self.tree.heading('Product Name', text="سعر الوحدة", anchor=W)
+
+        Label(self.tableframe6, text="   ").grid(row=1, column=0)
+        Label(self.tableframe6, text="   ").grid(row=2, column=0)
+        Label(self.tableframe6, text="   ").grid(row=3, column=0)
+
+        self.tree.grid(row=4, column=0, sticky="W")
+        scrollbary.config(command=self.tree.yview)
+        scrollbarx.grid(row=5, column=0, sticky="we")
+        scrollbarx.config(command=self.tree.xview)
+        scrollbary.grid(row=4, column=1, sticky="ns", pady=30)
+
+    def storesFun(self):
+        self.tableframe6.place_forget()
+        self.tableframe7.place_forget()
+        self.returnframe.place_forget()
+        self.searchframe.place_forget()
+        self.tableframe2.place_forget()
+        self.tableframe3.place_forget()
+        self.marketfrme.place_forget()
+        self.tableframe.place_forget()
+        self.formframe.place_forget()
+        self.tableframe1.place_forget()
+        self.formframe1.place_forget()
+        self.itemframe.place_forget()
+        self.tableframe4.place(self.tableframe4info)
+        self.tableframe5.place(self.tableframe5info)
+        self.salesframe.place(self.salesframeinfo)
+        self.storesframe.place(self.storesframeinfo)
+        self.cur.execute("delete from stores where product_quantity = 0")
+
+        self.table4()
+
+        self.store_entry = Entry(self.tableframe4, width=20, bg="light gray")
+
+        self.store_entry.place(x=320, y=10, height=40)
+        self.search_name = Button(self.tableframe4, text='بحث بالصنف', width=12, font="robot 12 bold", bg="#4267b2",
+                                  bd=5, command=self.search_store_table1)
+        self.search_name.place(x=20, y=10)
+        self.search_storeroom = Button(self.tableframe4, text='بحث برقم المخزن', width=12, font="robot 12 bold",
+                                       bg="#4267b2",
+                                       bd=5, command=self.search_store_table2)
+        self.search_storeroom.place(x=160, y=10)
+
+        self.storeroom_num_label = Label(self.storesframe, text="رقم المخزن", font="robot 12 bold", bg="light gray",
+                                         width=15).place(x=205, y=20)
+        self.storeroom_num = Entry(self.storesframe, bg="light gray", width=30)
+        self.storeroom_num.place(x=0, y=20)
+
+        self.product_pull_label = Label(self.storesframe, text="اسم الصنف", font="robot 12 bold",
+                                        bg="light gray", width=15).place(x=205, y=50)
+        self.product_pull = Entry(self.storesframe, bg="light gray", width=30)
+        self.product_pull.place(x=0, y=50)
+
+        self.quantity_pull_label = Label(self.storesframe, text="الكمية", font="robot 12 bold",
+                                         bg="light gray", width=15).place(x=205, y=80)
+        self.quantity_pull = Entry(self.storesframe, bg="light gray", width=30)
+        self.quantity_pull.place(x=0, y=80)
+        self.pull = Button(self.storesframe, text="سحب", width=14, font="robot 12 bold", bg="#4267b2",
+                           command=self.pull_button)
+        self.pull.place(x=205, y=200)
+
+        self.add = Button(self.storesframe, text="اضافة", width=16, font="robot 12 bold", bg="#4267b2",
+                          command=self.add_to_market)
+        self.add.place(x=100, y=110)
+
+
+        self.sell = Button(self.storesframe, text="بيع", width=17, font="robot 12 bold", bg="#4267b2")
+        self.sell.place(x=0, y=200)
+
+        self.delete = Button(self.storesframe, text="حذف", width=17, font="robot 12 bold", bg="#4267b2",
+                             command=self.delete_pulled_item)
+        self.delete.place(x=0, y=240)
+
+        self.store_return = Button(self.storesframe, text="مرتجع", width=14, font="robot 12 bold", bg="#4267b2")
+        self.store_return.place(x=205, y=240)
+
+        self.store_history = Button(self.storesframe, text="سجل السحب", width=17, font="robot 14 bold", bg="#4267b2", command=self.pull_history)
+        self.store_history.place(x=100, y=290)
+
+        self.insert_store()
+
+        scrollbarx = Scrollbar(self.tableframe5, orient=HORIZONTAL)
+        scrollbary = Scrollbar(self.tableframe5, orient=VERTICAL)
+        self.tree = ttk.Treeview(self.tableframe5,
+                                 columns=("Merchant", "Date", "Id", "Product Name"),
+                                 selectmode="extended", height=18,
+                                 yscrollcommand=scrollbary.set, xscrollcommand=scrollbarx.set)
+        self.tree.column('#0', stretch=NO, minwidth=0, width=0)
+        self.tree.column('#1', stretch=NO, minwidth=0, width=80)
+        self.tree.column('#2', stretch=NO, minwidth=0, width=80)
+        self.tree.column('#3', stretch=NO, minwidth=0, width=80)
+
+        self.tree.heading('Merchant', text="رقم المخزن", anchor=W)
+        self.tree.heading('Date', text="اسم الصنف", anchor=W)
+        self.tree.heading('Id', text="الكمية", anchor=W)
+        self.tree.heading('Product Name', text="سعر الكمية بيع", anchor=W)
+
+        self.tree.grid(row=0, column=0, sticky="W")
+        scrollbary.config(command=self.tree.yview)
+        scrollbarx.grid(row=1, column=0, sticky="we")
+        scrollbarx.config(command=self.tree.xview)
+        scrollbary.grid(row=0, column=1, sticky="ns", pady=30)
+
+
+
+    def search_store_table1(self):
+        ans = ''
+        try:
+            self.get_store_entry = str(self.store_entry.get())
+        except:
+            messagebox.showerror("خطأ", "من فضلك أدخل اسم الصنف بشكل صحيح")
+            return
+        if self.get_store_entry == "":
+            messagebox.showerror("خطأ", "من فضلك قم بكتابة اسم الصنف")
+            return
+        self.cur.execute(
+            'select product_storeroom, product_name, product_quantity, product_unit_price from stores'
+            ' where product_name=?', (self.get_store_entry,))
+        result = self.cur.fetchall()
+        self.table4()
+        x = 0
+        for i in result:
+            self.tree.insert('', 'end', values=(i))
+            if str(x) == i[0]:
+                a = self.tree.get_children()
+                ans = a[len(a) - 1]
+
+        return ans
+
+    def search_store_table2(self):
+        ans = ''
+        try:
+            self.get_store_entry = int(self.store_entry.get())
+        except:
+            messagebox.showerror("خطأ", "من فضلك أدخل رقم المخزن بشكل صحيح")
+            return
+        if self.get_store_entry == "":
+            messagebox.showerror("خطأ", "من فضلك قم بكتابة رقم المخزن")
+            return
+        self.cur.execute(
+            'select product_storeroom, product_name, product_quantity, product_unit_price from stores'
+            ' where product_storeroom=?', (self.get_store_entry,))
+        result = self.cur.fetchall()
+        self.table4()
+        x = 0
+        for i in result:
+            self.tree.insert('', 'end', values=(i))
+            if str(x) == i[0]:
+                a = self.tree.get_children()
+                ans = a[len(a) - 1]
+
+        return ans
+
+    def insert_store(self):
+
+        self.cur.execute("select * from stores;")
+        self.store_info = self.cur.fetchall()
+        self.table4()
+        self.base.commit()
+
+        x = 0
+        ans = ''
+        for i in self.store_info:
+            self.tree.insert('', 'end', values=i)
+            if str(x) == i[0]:
+                a = self.tree.get_children()
+                ans = a[len(a) - 1]
+        return ans
+
+    def marketFun(self):
+        self.returnframe.place_forget()
+        self.searchframe.place_forget()
+        self.tableframe2.place_forget()
+        self.tableframe3.place_forget()
+        self.tableframe.place_forget()
+        self.formframe.place_forget()
+        self.tableframe1.place_forget()
+        self.formframe1.place_forget()
+        self.itemframe.place_forget()
+        self.salesframe.place(self.salesframeinfo)
+        self.storesframe.place_forget()
+        self.marketfrme.place(self.marketfrmeinfo)
+        self.tableframe4.place_forget()
+        self.tableframe5.place_forget()
+        self.tableframe6.place(self.tableframe6info)
+        self.tableframe7.place(self.tableframe7info)
+
+        self.table6()
+        self.insert_market_items()
+
+        self.market_entry = Entry(self.tableframe6, width=20, bg="light gray")
+
+        self.market_entry.place(x=200, y=10, height=40)
+        self.search_name_m = Button(self.tableframe6, text='بحث بالصنف', width=12, font="robot 12 bold", bg="#4267b2",
+                                    bd=5, command=self.search_market_table)
+        self.search_name_m.place(x=38, y=10)
+
+        self.product_name_market_label = Label(self.marketfrme, text="اسم الصنف", font="robot 12 bold", bg="light gray",
+                                               width=15).place(x=205, y=20)
+        self.product_name_market = Entry(self.marketfrme, bg="light gray", width=30)
+        self.product_name_market.place(x=0, y=20)
+
+        self.quantity_market_label = Label(self.marketfrme, text="الكمية", font="robot 12 bold",
+                                           bg="light gray", width=15).place(x=205, y=50)
+        self.quantity_market = Entry(self.marketfrme, bg="light gray", width=30)
+        self.quantity_market.place(x=0, y=50)
+
+        self.price_market_label = Label(self.marketfrme, text="سعر الكمية", font="robot 12 bold",
+                                        bg="light gray", width=15).place(x=205, y=80)
+        self.price_market = Entry(self.marketfrme, bg="light gray", width=30)
+        self.price_market.place(x=0, y=80)
+
+        self.sell_market = Button(self.marketfrme, text="بيع", width=14, font="robot 12 bold", bg="#4267b2")
+        self.sell_market.place(x=205, y=130)
+
+        self.add_market = Button(self.marketfrme, text="اضافة", width=16, font="robot 12 bold", bg="#4267b2")
+        self.add_market.place(x=0, y=130)
+
+        self.delete_market = Button(self.marketfrme, text="حذف", width=16, font="robot 12 bold", bg="#4267b2")
+        self.delete_market.place(x=0, y=180)
+
+        self.return_market = Button(self.marketfrme, text="مرتجع", width=14, font="robot 12 bold", bg="#4267b2")
+        self.return_market.place(x=205, y=180)
+
+        scrollbarx = Scrollbar(self.tableframe7, orient=HORIZONTAL)
+        scrollbary = Scrollbar(self.tableframe7, orient=VERTICAL)
+        self.tree = ttk.Treeview(self.tableframe7,
+                                 columns=("Merchant", "Date", "Id", "Product Name"),
+                                 selectmode="extended", height=18,
+                                 yscrollcommand=scrollbary.set, xscrollcommand=scrollbarx.set)
+        self.tree.column('#0', stretch=NO, minwidth=0, width=0)
+        self.tree.column('#1', stretch=NO, minwidth=0, width=80)
+        self.tree.column('#2', stretch=NO, minwidth=0, width=80)
+        self.tree.column('#3', stretch=NO, minwidth=0, width=80)
+
+        self.tree.heading('Merchant', text="تاريخ البيع", anchor=W)
+        self.tree.heading('Date', text="اسم الصنف", anchor=W)
+        self.tree.heading('Id', text="الكمية", anchor=W)
+        self.tree.heading('Product Name', text="سعر الكمية", anchor=W)
+
+        self.tree.grid(row=0, column=0, sticky="W")
+        scrollbary.config(command=self.tree.yview)
+        scrollbarx.grid(row=1, column=0, sticky="we")
+        scrollbarx.config(command=self.tree.xview)
+        scrollbary.grid(row=0, column=1, sticky="ns", pady=30)
+
+    def Get_to_market(self, x=0):
+        ans = ''
+        self.table5()
+        self.cur.execute(
+            "select storeroom_num, product_name, quantity from market_table;")
+        productlist = self.cur.fetchall()
+        for i in productlist:
+            self.tree.insert('', 'end', values=(i))
+            if str(x) == i[0]:
+                a = self.tree.get_children()
+                ans = a[len(a) - 1]
+
+        return ans
+
+    def add_to_market(self):
+        #self.cur.execute("drop table market_table")
+        self.cur.execute("create table if not exists market_table"
+                         "(storeroom_num INTEGER not null,"
+                         "product_name varchar(30) not null,"
+                         "quantity INTEGER not null,"
+                         "quantity_price float not null);")
+        try:
+            self.get_storeroom_num = int(self.storeroom_num.get())
+            self.get_product_pull = str(self.product_pull.get())
+            self.get_quantity_pull = int(self.quantity_pull.get())
+        except:
+            messagebox.showerror("خطأ", "من فضلك أدخل بيانات صحيحة")
+
+        if self.get_storeroom_num == "" or self.get_product_pull == "" or self.get_quantity_pull=="":
+            messagebox.showerror("خطأ", "من فضلك ادخل جميع البيانات")
+
+        if self.get_quantity_pull <= 0:
+            messagebox.showerror("خطأ", "من فضلك أدخل الكمية مرة أخرى")
+            return
+
+
+        li = [self.get_storeroom_num, self.get_product_pull]
+        self.cur.execute("select product_name from stores;")
+        ex_product = self.cur.fetchall()
+        self.ex_product = ([tup[0] for tup in ex_product])
+
+        if self.get_product_pull not in self.ex_product:
+            messagebox.showerror("خطأ", "هذا الصنف غير موجود بالمخزن")
+            return
+
+        if self.get_product_pull in self.ex_product:
+            counter = 0
+            try:
+                self.cur.execute("select product_Storeroom from stores where  "
+                                 "product_Storeroom=? and product_name =?;",
+                                 (int(self.get_storeroom_num),
+                                  str(self.get_product_pull)))
+                match11 = self.cur.fetchall()
+                self.match11 = ([tup[0] for tup in match11])
+                self.match11 = self.match11[0]
+            except:
+                messagebox.showerror("خطأ", "البيانات المدخلة غير صحيحة")
+
+
+
+
+            self.cur.execute("select product_name from stores where  "
+                             "product_Storeroom=? and product_name =?;",
+                             (int(self.get_storeroom_num),
+                              str(self.get_product_pull)))
+
+            match22 = self.cur.fetchall()
+            self.match22 = ([tup[0] for tup in match22])
+            self.match22 = self.match22[0]
+
+            self.matchB = [self.match11, self.match22]
+
+
+
+            if self.matchB != "":
+                for i in li:
+                    if i in self.matchB:
+                        counter += 1
+
+            if counter == 2:
+                self.cur.execute("select product_quantity from stores where product_name = ? "
+                                 "and product_Storeroom=? ", (str(self.get_product_pull),
+                                                              int(self.get_storeroom_num)))
+                old_quantity = self.cur.fetchall()
+                self.old_quantity1 = ([tup[0] for tup in old_quantity])
+                self.old_quantity1 = self.old_quantity1[0]
+
+                self.new_quantity1 = int(self.old_quantity1 - self.get_quantity_pull)
+
+                if self.new_quantity1 < 0:
+                    messagebox.showerror("خطأ", "الكمية المطلوبة غير متوفرة بالمخزن")
+                    return
+
+                if self.new_quantity1 == 0:
+                    messagebox.showerror("تنبيه", "الكمية المتبقية من هذا الصنف في المخزن 0 برجاء استيراد كمية جديدة ")
+                self.cur.execute("update stores set product_quantity=? where product_name = ? and product_Storeroom=?",
+                                 (self.new_quantity1,
+                                  str(self.get_product_pull),
+                                  int(self.get_storeroom_num)))
+
+        self.get_price_pull = 0
+        self.cur.execute('insert into market_table values(?,?,?,?)', (
+            int(self.get_storeroom_num),
+            str(self.get_product_pull),
+            int(self.get_quantity_pull),
+            float(self.get_price_pull)))
+
+        self.cur.execute("create table if not exists market_items"
+                         "(product_name varchar(30) not null,"
+                         "product_quantity integer not null,"
+                         "quantity_price float not null);")
+
+        self.cur.execute("select product_name from market_items;")
+        ex_market_product = self.cur.fetchall()
+        self.ex_market_product = ([tup[0] for tup in ex_market_product])
+
+        if self.get_product_pull not in self.ex_market_product:
+            self.cur.execute("insert into market_items select product_name, quantity, quantity_price"
+                             " from market_table;")
+            self.cur.execute("select product_unit_price from stores where product_name=? and product_Storeroom=?",
+                             (self.get_product_pull, self.get_storeroom_num))
+            unit_price = self.cur.fetchall()
+            self.the_unit_price = ([tup[0] for tup in unit_price])
+            self.the_unit_price = self.the_unit_price[0]
+            self.cur.execute("update market_items set quantity_price = ? where product_name = ?",
+                             (self.the_unit_price, self.get_product_pull))
+
+        if self.get_product_pull in self.ex_market_product:
+            self.cur.execute("select quantity from market_table where product_name = ? ",
+                             (str(self.get_product_pull),))
+            old_quantity = self.cur.fetchall()
+            self.old_quantity2 = ([tup[0] for tup in old_quantity])
+            self.old_quantity2 = self.old_quantity2[0]
+
+            self.new_quantity2 = int(self.get_quantity_pull + self.old_quantity2)
+
+            self.cur.execute("update market_items set product_quantity=? where product_name = ?",
+                             (self.new_quantity2,
+                              str(self.get_product_pull)))
+
+
+        #self.get_price_pull.delete(0, END)
+        #self.get_price_pull.insert(0, self.new_text2)
+        self.Get_to_market()
+        self.table4()
+        self.insert_store()
+        self.base.commit()
+        self.new_text2 = " "
+        self.storeroom_num.delete(0, END)
+        self.storeroom_num.insert(0, self.new_text2)
+
+        self.product_pull.delete(0, END)
+        self.product_pull.insert(0, self.new_text2)
+
+        self.quantity_pull.delete(0, END)
+        self.quantity_pull.insert(0, self.new_text2)
+
+    def insert_market_items(self):
+        ans = ''
+
+        self.cur.execute("select * from market_items;")
+        productlist = self.cur.fetchall()
+        self.table6()
+        x = 0
+        for i in productlist:
+            self.tree.insert('', 'end', values=(i))
+            if str(x) == i[0]:
+                a = self.tree.get_children()
+                ans = a[len(a) - 1]
+
+        return ans
+
+    def delete_pulled_item(self):
+        self.delete_pulled_item_w = Tk()
+        width = 300
+        height = 100
+        screen_width = self.delete_pulled_item_w.winfo_screenwidth()
+        screen_height = self.delete_pulled_item_w.winfo_screenheight()
+        x = (screen_width / 2) - (width / 2)
+        y = (screen_height / 2) - (height / 2)
+        self.delete_pulled_item_w.geometry("%dx%d+%d+%d" % (width, height, x, y))
+
+        self.delete_pulled_item_entry = Entry(self.delete_pulled_item_w, bg="light grey", font="robot 14")
+        self.delete_pulled_item_entry.grid(row=2, column=1)
+        self.delete_pulled_item_label = Label(self.delete_pulled_item_w, text="ادخل اسم الصنف", font="roboto 14 bold",
+                                              bg="#FFFFFF")
+        self.delete_pulled_item_label.grid(row=2, column=2)
+
+        self.delete_pulled_item_entry2 = Entry(self.delete_pulled_item_w, bg="light grey", font="robot 14")
+        self.delete_pulled_item_entry2.grid(row=3, column=1)
+        self.delete_pulled_item_label2 = Label(self.delete_pulled_item_w, text="ادخل رقم المخزن", font="roboto 14 bold",
+                                              bg="#FFFFFF")
+        self.delete_pulled_item_label2.grid(row=3, column=2)
+
+        self.delete_pulled_item_button = Button(self.delete_pulled_item_w, text="حذف", font="robot 16 bold", fg="black",
+                                                bg="#4267b2",
+                                                command=self.final_delete_pulled_item)
+        self.delete_pulled_item_button.grid(row=4, column=1)
+        self.delete_pulled_item_w.mainloop()
+
+    def final_delete_pulled_item(self):
+        self.get_delete_pulled_item_entry = str(self.delete_pulled_item_entry.get())
+        self.get_delete_pulled_item_entry2 = int(self.delete_pulled_item_entry2.get())
+
+        self.cur.execute("select quantity from market_table where product_name = ? ",
+                         (str(self.get_delete_pulled_item_entry),))
+        old_quantity = self.cur.fetchall()
+        self.old_quantity3 = ([tup[0] for tup in old_quantity])
+        self.old_quantity3 = self.old_quantity3[0]
+
+        self.cur.execute("select product_quantity from market_items where product_name = ? ",
+                         (str(self.get_delete_pulled_item_entry),))
+        old_quantity2 = self.cur.fetchall()
+        self.old_quantity4 = ([tup[0] for tup in old_quantity2])
+        self.old_quantity4 = self.old_quantity4[0]
+        self.new_quantity5 = int(abs(self.old_quantity4 - self.old_quantity3))
+        self.cur.execute("update market_items set product_quantity=? where product_name = ?",
+                         (self.new_quantity5,
+                          str(self.get_delete_pulled_item_entry)))
+
+
+        self.cur.execute("select product_quantity from stores where product_name = ? and product_Storeroom = ? ",
+                         (str(self.get_delete_pulled_item_entry),
+                          int(self.get_delete_pulled_item_entry2)))
+        old_quantity0 = self.cur.fetchall()
+        self.old_quantity6 = ([tup[0] for tup in old_quantity0])
+        self.old_quantity6 = self.old_quantity6[0]
+
+        self.new_quantity6 = int(abs(self.old_quantity6 + self.old_quantity3))
+
+        self.cur.execute("update stores set product_quantity=? where product_name = ? and product_Storeroom = ?",
+                         (self.new_quantity6,
+                          str(self.get_delete_pulled_item_entry),
+                          int(self.get_delete_pulled_item_entry2)))
+
+        self.cur.execute("delete from market_table where product_name = ?;", (self.get_delete_pulled_item_entry,))
+        self.base.commit()
+        self.delete_pulled_item_w.destroy()
+        self.Get_to_market()
+        self.insert_store()
+
+    def pull_button(self):
+        if messagebox.askyesno("تنبيه", "هل تريد سحب هذه الاصناف") == True:
+            #self.cur.execute('drop table to_market_table_new;')
+            self.cur.execute("create table if not exists to_market_table_new"
+                             "(storeroom_num INTEGER not null,"
+                             "product_name varchar(30) not null,"
+                             "quantity INTEGER not null,"
+                             "price float not null);")
+
+            self.cur.execute("INSERT INTO to_market_table_new select * FROM market_table;")
+            self.cur.execute("delete from market_table;")
+            self.base.commit()
+            self.table5()
+
+    def pull_history_table(self):
+        scrollbarx = Scrollbar(self.pullhistory_table_frame, orient=HORIZONTAL)
+        scrollbary = Scrollbar(self.pullhistory_table_frame, orient=VERTICAL)
+        self.tree = ttk.Treeview(self.pullhistory_table_frame,
+                                 columns=("Merchant", "Date", "Id", "Product Name", "Quantity"),
+                                 selectmode="extended", height=18,
+                                 yscrollcommand=scrollbary.set, xscrollcommand=scrollbarx.set)
+        self.tree.column('#0', stretch=NO, minwidth=0, width=0)
+        self.tree.column('#1', stretch=NO, minwidth=0, width=80)
+        self.tree.column('#2', stretch=NO, minwidth=0, width=80)
+        self.tree.column('#3', stretch=NO, minwidth=0, width=80)
+        self.tree.column('#4', stretch=NO, minwidth=0, width=80)
+
+        self.tree.heading('Merchant', text="رقم المخزن", anchor=W)
+        self.tree.heading('Date', text="اسم الصنف", anchor=W)
+        self.tree.heading('Id', text="الكمية", anchor=W)
+        self.tree.heading('Product Name', text="سعر الكمية بيع", anchor=W)
+        self.tree.heading('Quantity', text="تاريخ السحب", anchor=W)
+
+        self.tree.grid(row=0, column=0, sticky="W")
+        scrollbary.config(command=self.tree.yview)
+        scrollbarx.grid(row=1, column=0, sticky="we")
+        scrollbarx.config(command=self.tree.xview)
+        scrollbary.grid(row=0, column=1, sticky="ns", pady=30)
+
+
+    def Get_pullhistory(self, x=0):
+        ans = ''
+        x = 0
+        self.cur.execute(
+            "select * from to_market_table_new;")
+        productlist = self.cur.fetchall()
+        for i in productlist:
+            self.tree.insert('', 'end', values=(i))
+            if str(x) == i[0]:
+                a = self.tree.get_children()
+                ans = a[len(a) - 1]
+
+        return ans
+
+
+    def pull_history(self):
+        self.pullhistoryw = Tk()
+        width = 700
+        height = 500
+        screen_width = self.pullhistoryw.winfo_screenwidth()
+        screen_height = self.pullhistoryw.winfo_screenheight()
+        x = (screen_width / 2) - (width / 2)
+        y = (screen_height / 2) - (height / 2)
+        self.pullhistoryw.geometry("%dx%d+%d+%d" % (width, height, x, y))
+
+        self.pullhistory_table_frame = Frame(self.pullhistoryw, width=1400, height=450, bg="#FFFFFF")
+        self.pullhistory_table_frame.place(x=120, y=80)
+        self.pullhistory_table_frame_info = self.searchframe.place_info()
+
+        self.searchbutton = Button(self.pullhistoryw, text="بحث بالتاريخ", font="roboto 14", bg="#FFFFFF", bd=5)
+        self.searchbutton.place(x=240, y=10)
+
+        self.searchbutton2 = Button(self.pullhistoryw, text="بحث بالصنف", font="roboto 14", bg="#FFFFFF", bd=5, command=self.search_pullhistory_table1)
+        self.searchbutton2.place(x=130, y=10)
+
+        self.searchvar1 = StringVar()
+        self.searchentry1 = Entry(self.pullhistoryw, textvariable=self.searchvar1, font="roboto 14", width=25,
+                                 bg="#FFFFFF")
+        self.searchentry1.place(x=360, y=20)
+
+        self.pull_history_table()
+
+        self.Get_pullhistory()
+
+        self.pullhistoryw.mainloop()
+
+
+    def search_pullhistory_table1(self):
+        ans = ''
+        try:
+            self.get_searchentry1 = str(self.searchentry1.get())
+        except:
+            messagebox.showerror("خطأ", "من فضلك أدخل اسم الصنف بشكل صحيح")
+            return
+        if self.get_searchentry1 == "":
+            messagebox.showerror("خطأ", "من فضلك قم بكتابة اسم الصنف")
+            return
+        self.cur.execute(
+            'select * from market_items'
+            ' where product_name=?', (self.get_searchentry1,))
+        result = self.cur.fetchall()
+        self.pull_history_table()
+        x = 0
+        for i in result:
+            self.tree.insert('', 'end', values=(i))
+            if str(x) == i[0]:
+                a = self.tree.get_children()
+                ans = a[len(a) - 1]
+
+        return ans
+
+
+
+
+    def search_market_table(self):
+        ans = ''
+        try:
+            self.get_market_entry = str(self.market_entry.get())
+        except:
+            messagebox.showerror("خطأ", "من فضلك أدخل اسم الصنف بشكل صحيح")
+            return
+        if self.get_market_entry == "":
+            messagebox.showerror("خطأ", "من فضلك قم بكتابة اسم الصنف")
+            return
+        self.cur.execute(
+            'select product_name, product_quantity, quantity_price from market_items'
+            ' where product_name=?', (self.get_market_entry,))
+        result = self.cur.fetchall()
+        self.table6()
+        x = 0
+        for i in result:
+            self.tree.insert('', 'end', values=(i))
+            if str(x) == i[0]:
+                a = self.tree.get_children()
+                ans = a[len(a) - 1]
+
+        return ans

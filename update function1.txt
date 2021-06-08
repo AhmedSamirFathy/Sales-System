@@ -1,0 +1,36 @@
+    def changeprodtable(self):
+        cur = self.tree.selection()
+        cur = self.tree.item(cur)
+        li = cur['values']
+        self.itemeditv.set((self.itemeditv.get()).upper())
+        self.itemeditcatv.set((self.itemeditcatv.get()).upper())
+        self.itemeditdescv.set((self.itemeditdescv.get()).upper())
+        if (len(li) == 6):
+            if self.itemeditv.get() == '' or self.itemeditdescv.get() == '':
+                messagebox.showerror("Error", "Please Fill All Fields")
+                return
+            elif self.itemeditcatv.get() == '' or self.itemeditstockv.get() == '' or self.itemeditpricev.get() == '':
+                messagebox.showerror("Error", "Please Fill All Fields")
+                return
+            else:
+                l = [self.itemeditpricev.get(), self.itemeditstockv.get()]
+                for i in range(0, len(l)):
+                    if (not l[i].isdigit()):
+                        messagebox.showerror("Error", "Invalid Data Provided")
+                        return
+                    elif (int(l[i]) < 0):
+                        messagebox.showerror("Error", "Invalid Data Provided")
+                        return
+            if (self.addstock.get() == ''):
+                self.addstock.set('0')
+
+            self.cur.execute(
+                "update merchants set merchant_name=?,debt=?;",
+                (
+                self.itemeditv.get(), self.itemeditdescv.get(), self.itemeditcatv.get(), int(self.itemeditpricev.get()),
+                (int(self.itemeditstockv.get()) + int(self.addstock.get())), li[0]))
+            self.base.commit()
+            self.addstock.set('')
+            self.tree.delete(*self.tree.get_children())
+            cur = self.getproducts(li[0])
+            self.tree.selection_set(cur)
